@@ -1,56 +1,56 @@
 import sys
-from PyQt5.QtWidgets import QApplication, QMainWindow, QGraphicsView, QGraphicsScene
-from PyQt5.QtGui import QPen
-from PyQt5.QtCore import QTimer, Qt
-from random import randint
+from PyQt5.QtWidgets import QGraphicsLineItem, QApplication, QGraphicsView, QGraphicsScene, QVBoxLayout, QWidget
+from PyQt5.QtGui import QFont
 
-def create_graph_view():
-    # QGraphicsView 및 QGraphicsScene 생성
-    view = QGraphicsView()
-    scene = QGraphicsScene()
-    view.setScene(scene)
-    view.setGeometry(0,0, 600, 400)
-    return view, scene
-
-def update_graph(scene, data):
-    # 이전 그래프 삭제
-    scene.clear()
-
-    # 파란색 펜 생성
-    pen = QPen(Qt.blue, 2)
-
-    # 그래프 그리기
-    for i in range(len(data) - 1):
-        x1, y1 = i * 50, 600-data[i] * 10
-        x2, y2 = (i + 1) * 50, 600-data[i + 1] * 10
-        scene.addLine(x1, y1, x2, y2, pen)
-
-class MyWindow(QMainWindow):
+class GraphWidget(QWidget):
     def __init__(self):
         super().__init__()
 
-        self.setWindowTitle("Real-time Line Graph Example")
+        # QGraphicsView 및 QGraphicsScene 생성
+        self.view = QGraphicsView()
+        self.scene = QGraphicsScene()
 
-        # QGraphicsView 생성
-        self.view, self.scene = create_graph_view()
-        self.setCentralWidget(self.view)
+        # 세로축 높이 및 눈금 크기
+        vertical_height = 300
+        tick_size = 50
 
-        # 데이터 초기화 및 QTimer 시작
-        self.data = [0]
-        self.timer = QTimer(self)
-        self.timer.timeout.connect(self.update_data)
-        self.timer.start(1000)  # 1초마다 데이터 업데이트
+        # 그래프 시작 지점 (왼쪽 상단)
+        start_x, start_y = 0, 0
 
-    def update_data(self):
-        # 1에서 10 사이의 랜덤 값을 추가
-        self.data.append(randint(1, 10))
-        update_graph(self.scene, self.data)
+        # x 축 그리기
+        self.scene.addLine(start_x, start_y + vertical_height, start_x + 300, start_y + vertical_height)
 
-def main():
+        # y 축 그리기 및 눈금 추가
+        self.scene.addLine(start_x, start_y, start_x, start_y + vertical_height)
+        for i in range(0, vertical_height + 1, tick_size):
+            tick = QGraphicsLineItem(start_x - 5, start_y + vertical_height - i, start_x + 5, start_y + vertical_height - i)
+            self.scene.addItem(tick)
+            text = self.scene.addText(str(i))
+            text.setFont(QFont("Arial", 8))
+            text.setPos(start_x - 30, start_y + vertical_height - i - 5)
+
+        # 그래프 그리기
+        data_points = [0, 50, 150, 100,  200, 300, 250]  # 예시 데이터 포인트
+        for i in range(len(data_points) - 1):
+            x1 = start_x + i * 50
+            y1 = start_y + vertical_height - data_points[i]
+            x2 = start_x + (i + 1) * 50
+            y2 = start_y + vertical_height - data_points[i + 1]
+            self.scene.addLine(x1, y1, x2, y2)
+
+        # QGraphicsView에 scene 설정
+        self.view.setScene(self.scene)
+
+        # Layout 설정
+        layout = QVBoxLayout()
+        layout.addWidget(self.view)
+        self.setLayout(layout)
+
+
+if __name__ == '__main__':
     app = QApplication(sys.argv)
-    window = MyWindow()
+    window = GraphWidget()
+    window.setWindowTitle('꺾은선 그래프')
+    window.setGeometry(100, 100, 400, 400)
     window.show()
     sys.exit(app.exec_())
-
-if __name__ == "__main__":
-    main()

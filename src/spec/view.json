@@ -12,6 +12,7 @@
 
             "graph_table",
             "graph_view",
+            "graph_scene",
             
             "prg_no",
             "use_step",

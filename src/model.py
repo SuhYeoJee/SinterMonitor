@@ -9,11 +9,13 @@ import pymcprotocol
 
 DEBUG = True
 
+
 class Model():
     def __init__(self):
         self.config = self.get_config()
         self.data_spec = self.get_data_spec()
         self.pymc3e = self.connect_pymc()
+        self.T = 0
     # -------------------------------------------------------------------------------------------
     def get_config(self,section:str="DEFAULT",config_path:str="config.txt",enc:str="utf-8"):
         config = ConfigParser()
@@ -45,11 +47,13 @@ class Model():
         return pymc3e
     # -------------------------------------------------------------------------------------------
     @ensure_connected
-    def get_plc_data_by_addrs(self,words=[]):
-        if DEBUG:return ['_'+x for x in words]
+    def get_plc_data_by_addrs(self,words=[])->dict:
+        if DEBUG:
+            self.T  += len(words)
+            return [x+self.T for x in range(len(words))]
         return self.pymc3e.randomread(word_devices=words,dword_devices=[])
     # --------------------------
-    def get_plc_data_by_dataset_name(self,dataset_name:str):
+    def get_plc_data_by_dataset_name(self,dataset_name:str)->dict:
         dataset:dict = self.data_spec["plc_reg_addr"].get(dataset_name,{})
         revers_dataset = {v:k for k,v in dataset.items()}
         addrs = list(dataset.values())
@@ -57,7 +61,7 @@ class Model():
 
         return {revers_dataset[addrs[i]]:v for i,v in enumerate(values)}
     # --------------------------
-    def get_plc_data_by_addr_names(self,dataset_name:str,addr_names:list):
+    def get_plc_data_by_addr_names(self,dataset_name:str,addr_names:list)->dict:
         dataset:dict = {k:v for k,v in self.data_spec["plc_reg_addr"].get(dataset_name,{}).items() if k in addr_names}
         revers_dataset = {v:k for k,v in dataset.items()}
         addrs = list(dataset.values())

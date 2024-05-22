@@ -13,6 +13,7 @@ class View(QMainWindow):
         self.widgets = {}
         self.layouts = {}
         self.dialogs = {}        
+        self.table_spec = {}
         # --------------------------
         screen = QDesktopWidget().screenGeometry() # 화면 크기 조정
         self.resize(int(screen.width() * 0.5), int(screen.height() * 0.73))
@@ -24,15 +25,7 @@ class View(QMainWindow):
         self.widgets['main'] = QWidget()
         self.widgets['main'].setLayout(self.layouts['main'])
         self.setCentralWidget(self.widgets['main'])
-    # -------------------------------------------------------------------------------------------
-    def get_lay1(self,val:str=''):
-        lay1 = QVBoxLayout()
-        self.widgets['main_text'] = self.wb.get_label(f"new project: {val}")
-        lay1.addWidget(self.widgets['main_text'])
-        return lay1
-    
-    def change_main_text(self,val:str=''):
-        self.widgets['main_text'].setText(val)
+
     # [menu] ===========================================================================================
     def create_menu(self):
         open_action = QAction('Open', self)
@@ -58,30 +51,8 @@ class View(QMainWindow):
     def save_action_triggered(self):
         print('Save clicked')
     # ===========================================================================================
-
-    #temp
-    def create_multi_line_graph(self,data1, data2, data3):
-        def draw_line(scene, data, color):
-            # 선을 그리기 위한 펜 설정
-            pen = QPen(color)
-            pen.setWidth(2)
-
-            # 선 그리기
-            for i in range(len(data) - 1):
-                x1, y1 = i * 50, 300 - data[i] * 10
-                x2, y2 = (i + 1) * 50, 300 - data[i + 1] * 10
-                scene.addLine(x1, y1, x2, y2, pen)
-
-            return scene
-        # QGraphicsView 및 QGraphicsScene 생성
-        view = QGraphicsView()
-        scene = QGraphicsScene()
-        view.setScene(scene)
-        # 각 데이터에 대한 선 그리기
-        draw_line(scene, data1, Qt.red)
-        draw_line(scene, data2, Qt.green)
-        draw_line(scene, data3, Qt.blue)
-        return view
+    def get_load_file_name(self): #temp
+        return "./result/" + "2024-05-23_01-01-56.xlsx"
 
 # ===========================================================================================
     def get_top_layout(self)->QHBoxLayout:
@@ -92,7 +63,16 @@ class View(QMainWindow):
         top_layout.addLayout(self.wb.get_label_and_line_edit_layout("총 작업시간",self.widgets,"work_time"))
         top_layout.addWidget(self.wb.get_vline_widget())
         self.widgets['now_date'] = self.wb.get_line_edit_widget(300)
-        top_layout.addWidget(self.widgets['now_date'],2)    
+        top_layout.addWidget(self.widgets['now_date'],2)
+        
+
+        self.widgets['b1'] = self.wb.get_button("b1")
+        self.widgets['b2'] = self.wb.get_button("b2")
+        self.widgets['b3'] = self.wb.get_button("b3")
+        top_layout.addWidget(self.widgets['b1'])
+        top_layout.addWidget(self.widgets['b2'])
+        top_layout.addWidget(self.widgets['b3'])
+
         return top_layout
     # -------------------------------------------------------------------------------------------
     #temp
@@ -107,11 +87,9 @@ class View(QMainWindow):
 
     def get_graph_view_layout(self)->QVBoxLayout:
         
-        # data1 = [3, 5, 7, 9, 6, 8, 4, 2, 1, 3,3, 5, 7, 9, 6, 8, 4, 2, 1, 3,3, 5, 7, 9, 6, 8, 4, 2, 1, 3]
-        # data2 = [8, 6, 4, 2, 5, 7, 9, 1, 3, 2,8, 6, 4, 2, 5, 7, 9, 1, 3, 2,8, 6, 4, 2, 5, 7, 9, 1, 3, 2]
         # data3 = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10,1, 2, 3, 4, 5, 6, 7, 8, 9, 10,1, 2, 3, 4, 5, 6, 7, 8, 9, 10]
         # view = self.create_multi_line_graph(data1, data2, data3)
-        graph_table_form={'init_size' : (3,7), 'slim_rows' : [],'slim_cols' : [],'text_items' : {
+        self.table_spec['graph_form']={'init_size' : (3,7), 'slim_rows' : [],'slim_cols' : [],'text_items' : {
                 (0,0):[(1,1),"PRG.NO", ['center']],
                 (0,1):[(1,1),"STEP", ['center']],
                 (0,2):[(1,1),"Current", ['center']],
@@ -122,7 +100,7 @@ class View(QMainWindow):
                 (1,0):[(2,1),"", ['center']],
                 (1,1):[(2,1),"", ['center']],
         },}
-        graph_table_pos={
+        self.table_spec['graph_pos']={
             "prg_no":(1,0),
             "step":(1,1),
             "current":(1,2),
@@ -136,7 +114,7 @@ class View(QMainWindow):
             "total_time":(1,6),
         }
         
-        graph_table = TablePlusWidget(form_data=graph_table_form, pos_data=graph_table_pos)
+        graph_table = TablePlusWidget(form_data=self.table_spec['graph_form'], pos_data=self.table_spec['graph_pos'])
         graph_table_layout = QHBoxLayout()
         graph_table_layout.addWidget(graph_table)
         self.widgets['graph_table'] = graph_table
@@ -146,6 +124,8 @@ class View(QMainWindow):
         graph_layout = QHBoxLayout()
         graph_layout.addWidget(self.wb.get_box_frame_widget(graph_scale_layout),2)
         self.widgets['graph_view'] = QGraphicsView()
+        self.widgets['graph_scene'] = QGraphicsScene()
+        self.widgets['graph_view'].setScene(self.widgets['graph_scene'])
         graph_layout.addWidget(self.widgets['graph_view'],16)
         graph_layout.addWidget(self.wb.get_box_frame_widget(graph_legend_layout),1)
         # --------------------------
@@ -160,7 +140,7 @@ class View(QMainWindow):
         program_top_layout.addLayout(self.wb.get_label_and_line_edit_layout("STEP",self.widgets,'use_step'))
         program_top_layout.addLayout(self.wb.get_label_and_line_edit_layout("PRG.NAME",self.widgets,'prg_name'))
         # --------------------------
-        program_table_form={'init_size' : (12,6), 'slim_rows' : [],'slim_cols' : [],
+        self.table_spec['program_form']={'init_size' : (12,6), 'slim_rows' : [],'slim_cols' : [],
                     'text_items' : {
                         (0,0):[(1,1),"STEP", ['center']],
                         (0,1):[(1,1),"Current%", ['center']],
@@ -235,7 +215,7 @@ class View(QMainWindow):
                         (11,4):[(1,1),"", ['center']],
                         (11,5):[(1,1),"", ['center']],                                                                                                                                                     
                     },}
-        program_table_pos={
+        self.table_spec['program_pos']={
             "step1_current":(1,1),
             "step1_press":(1,2),
             "step1_temp":(1,3),
@@ -284,7 +264,7 @@ class View(QMainWindow):
             "sint_dim":(9,5),
             "min_current":(11,5),
         }        
-        program_table = TablePlusWidget(form_data=program_table_form,pos_data=program_table_pos)
+        program_table = TablePlusWidget(form_data=self.table_spec['program_form'],pos_data=self.table_spec['program_pos'])
         self.widgets['program_table'] = program_table
         program_view_layout = QVBoxLayout()
         program_view_layout.addLayout(program_top_layout)
@@ -292,7 +272,7 @@ class View(QMainWindow):
         return program_view_layout
     # -------------------------------------------------------------------------------------------
     def get_mould_view_layout(self)->QVBoxLayout:
-        mould_top_table_form ={'init_size' : (5,6), 'slim_rows' : [],'slim_cols' : [],
+        self.table_spec['mould_top_form'] ={'init_size' : (5,6), 'slim_rows' : [],'slim_cols' : [],
                     'text_items' : {
                         (0,0):[(1,1),"Magazine", ['center']],
                         (1,0):[(1,1),"Start", ['center']],
@@ -303,7 +283,7 @@ class View(QMainWindow):
                         (3,3):[(1,2),"work prg.no", ['center']],
                         (4,3):[(1,2),"work count", ['center']],
                     }}
-        mould_top_table_pos={
+        self.table_spec['mould_top_pos']={
             "magazine_l":(0,1),
             "start_l1":(1,1),
             "start_l2":(2,1),
@@ -319,10 +299,10 @@ class View(QMainWindow):
             "work_prg_no":(3,5),
             "work_count":(4,5),                            
         }
-        mould_top_table = TablePlusWidget(form_data=mould_top_table_form,pos_data=mould_top_table_pos)
+        mould_top_table = TablePlusWidget(form_data=self.table_spec['mould_top_form'],pos_data=self.table_spec['mould_top_pos'])
         self.widgets['mould_top_table'] = mould_top_table
         # --------------------------
-        mould_bottom_table_form={'init_size' : (6,6), 'slim_rows' : [],'slim_cols' : [],
+        self.table_spec['mould_bottom_form']={'init_size' : (6,6), 'slim_rows' : [],'slim_cols' : [],
                     'text_items' : {
                         (0,1):[(1,1),"Turn", ['center']],
                         (0,2):[(1,1),"Height", ['center']],
@@ -336,8 +316,7 @@ class View(QMainWindow):
                         (5,0):[(1,1),"5", ['center']],
                         (6,0):[(1,1),"6", ['center']],
                     }}
-        mould_bottom_table_pos={
-            "step1_current":(1,1),
+        self.table_spec['mould_bottom_pos']={
             "turn_l1":(1,1),
             "height_l1":(1,2),
             "turn_r1":(1,3),
@@ -369,7 +348,7 @@ class View(QMainWindow):
             "height_r6":(6,4),
             "prg_no6":(6,5),
         }
-        mould_bottom_table = TablePlusWidget(form_data=mould_bottom_table_form,pos_data=mould_bottom_table_pos)
+        mould_bottom_table = TablePlusWidget(form_data=self.table_spec['mould_bottom_form'],pos_data=self.table_spec['mould_bottom_pos'])
         self.widgets['mould_bottom_table'] = mould_bottom_table
         # --------------------------
         mould_view_layout = QVBoxLayout()
@@ -392,10 +371,89 @@ class View(QMainWindow):
         main_layout.addLayout(self.layouts['graph_view_layout'],6)
         main_layout.addLayout(bottom_view_layout,4)
         return main_layout
+    # ===========================================================================================
+    def set_value_by_label_and_text(self,table_name,datas:dict):
+        pos_and_text = {v:datas[k] for k,v in self.table_spec[table_name.replace('_table','_pos')].items() if k in datas.keys()}
+        self.widgets[table_name].fill_datas_position(pos_and_text)
 
+    def set_graph(self,graph_raw_data:dict):
+        graph_data = {}
+        for k,v in graph_raw_data.items():
+            graph_data[k] = [(i * 50, val) for i, val in enumerate(v)]
+
+        scene = self.widgets['graph_scene']
+        x = len(graph_data["current"]) * 50
+
+        for line_name, line_data in graph_data.items():
+            if len(line_data) > 1:
+                previous_point = line_data[-2]
+                new_point = line_data[-1]
+                line = QGraphicsLineItem(previous_point[0], 100 - previous_point[1], new_point[0], 100 - new_point[1])
+                pen = Qt.black if 'current' in line_name else Qt.red if 'press' in line_name else Qt.blue
+                line.setPen(pen)
+                scene.addItem(line)
+        self.widgets['graph_view'].fitInView(scene.sceneRect(), Qt.KeepAspectRatio) 
+
+
+    def get_d(self):
+        return {'current': [69, 86, 103, 120, 137, 154],
+        'press': [71, 88, 105, 122, 139, 156],
+        'real_current': [70, 87, 104, 121, 138, 155],
+        'real_press': [72, 89, 106, 123, 140, 157],
+        'real_temp': [74, 91, 108, 125, 142, 159],
+        'temp': [73, 90, 107, 124, 141, 158]}        
+
+def set_graph(view,scene,graph_raw_data:dict={}):
+    # graph_raw_data = {'current': [69, 86, 103, 120, 137, 154],
+    # 'press': [71, 88, 105, 122, 139, 156],
+    # 'real_current': [70, 87, 104, 121, 138, 155],
+    # 'real_press': [72, 89, 106, 123, 140, 157],
+    # 'real_temp': [74, 91, 108, 125, 142, 159],
+    # 'temp': [73, 90, 107, 124, 141, 158]}        
+    # graph_data = {}
+    # for k,v in graph_raw_data.items():
+    #     graph_data[k] = [(i * 50, val) for i, val in enumerate(v)]
+
+    # for line_name, line_data in graph_data.items():
+    #     if len(line_data) > 1:
+    #         previous_point = line_data[-2]
+    #         new_point = line_data[-1]
+    #         line = QGraphicsLineItem(previous_point[0], 100 - previous_point[1], new_point[0], 100 - new_point[1])
+    #         pen = Qt.black if 'current' in line_name else Qt.red if 'press' in line_name else Qt.blue
+    #         line.setPen(pen)
+    #         scene.addItem(line)
+        
+    # -------------------------------------------------------------------------------------------
+    start_x, start_y = 50, 50
+    vertical_height = view.height()
+    view_width = view.width()
+    tick_size = 50
+    scene.setSceneRect(0, 0, view_width, vertical_height)
+    # x 축 그리기
+    scene.addLine(start_x, vertical_height-start_y, view_width - start_x, vertical_height-start_y)
+    # y 축 그리기 및 눈금 추가
+    scene.addLine(start_x, start_y, start_x, vertical_height - start_y)
+    for i in range(0, vertical_height + 1, tick_size):
+        tick = QGraphicsLineItem(start_x - 5, start_y + vertical_height - i, start_x + 5, start_y + vertical_height - i)
+        scene.addItem(tick)
+        text = scene.addText(str(i))
+        text.setFont(QFont("Arial", 8))
+        text.setPos(start_x - 30, start_y + vertical_height - i - 5)
+
+    # 그래프 그리기
+    data_points = [0, 50, 150, 100,  200, 300, 250]  # 예시 데이터 포인트
+    for i in range(len(data_points) - 1):
+        x1 = start_x + i * 50
+        y1 = start_y + vertical_height - data_points[i]
+        x2 = start_x + (i + 1) * 50
+        y2 = start_y + vertical_height - data_points[i + 1]
+        scene.addLine(x1, y1, x2, y2)
+
+    view.fitInView(scene.sceneRect(), Qt.KeepAspectRatio)  # scene을 viewport에 가득 채우도록 합니다.
 # ===========================================================================================
 if __name__ == "__main__":
     app = QApplication([])
-    window = View()
-    window.show()
+    v = View()
+    v.show()
+    set_graph(v.widgets['graph_view'],v.widgets['graph_scene'])
     app.exec_()
