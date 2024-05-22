@@ -126,14 +126,14 @@ class View(QMainWindow):
             "prg_no":(1,0),
             "step":(1,1),
             "current":(1,2),
-            "press":(1,3),
-            "temp":(1,4),
-            "time":(1,5),
-            "total_time":(1,6),
             "real_current":(2,2),
+            "press":(1,3),
             "real_press":(2,3),
+            "temp":(1,4),
             "real_temp":(2,4),
-            "real_time":(2,5)          
+            "time":(1,5),
+            "real_time":(2,5),
+            "total_time":(1,6),
         }
         
         graph_table = TablePlusWidget(form_data=graph_table_form, pos_data=graph_table_pos)
@@ -235,7 +235,56 @@ class View(QMainWindow):
                         (11,4):[(1,1),"", ['center']],
                         (11,5):[(1,1),"", ['center']],                                                                                                                                                     
                     },}
-        program_table = TablePlusWidget(form_data=program_table_form)
+        program_table_pos={
+            "step1_current":(1,1),
+            "step1_press":(1,2),
+            "step1_temp":(1,3),
+            "step1_time":(1,4),
+            "step2_current":(2,1),
+            "step2_press":(2,2),
+            "step2_temp":(2,3),
+            "step2_time":(2,4),
+            "step3_current":(3,1),
+            "step3_press":(3,2),
+            "step3_temp":(3,3),
+            "step3_time":(3,4),
+            "step4_current":(4,1),
+            "step4_press":(4,2),
+            "step4_temp":(4,3),
+            "step4_time":(4,4),
+            "step5_current":(5,1),
+            "step5_press":(5,2),
+            "step5_temp":(5,3),
+            "step5_time":(5,4),
+            "step6_current":(6,1),
+            "step6_press":(6,2),
+            "step6_temp":(6,3),
+            "step6_time":(6,4),
+            "step7_current":(7,1),
+            "step7_press":(7,2),
+            "step7_temp":(7,3),
+            "step7_time":(7,4),
+            "step8_current":(8,1),
+            "step8_press":(8,2),
+            "step8_temp":(8,3),
+            "step8_time":(8,4),
+            "step9_current":(9,1),
+            "step9_press":(9,2),
+            "step9_temp":(9,3),
+            "step9_time":(9,4),
+            "step10_current":(10,1),
+            "step10_press":(10,2),
+            "step10_temp":(10,3),
+            "step10_time":(10,4),
+            "step11_press":(11,2),
+            "step11_time":(11,4),
+            "step12_press":(3,5),
+            "step12_temp":(5,5),
+            "step12_time":(7,5),
+            "sint_dim":(9,5),
+            "min_current":(11,5),
+        }        
+        program_table = TablePlusWidget(form_data=program_table_form,pos_data=program_table_pos)
         self.widgets['program_table'] = program_table
         program_view_layout = QVBoxLayout()
         program_view_layout.addLayout(program_top_layout)
@@ -254,7 +303,23 @@ class View(QMainWindow):
                         (3,3):[(1,2),"work prg.no", ['center']],
                         (4,3):[(1,2),"work count", ['center']],
                     }}
-        mould_top_table = TablePlusWidget(form_data=mould_top_table_form)
+        mould_top_table_pos={
+            "magazine_l":(0,1),
+            "start_l1":(1,1),
+            "start_l2":(2,1),
+            "finish_l1":(3,1),
+            "finish_l2":(4,1),
+            "magazine_r":(0,2),
+            "start_r1":(1,2),
+            "start_r2":(2,2),
+            "finish_r1":(3,2),
+            "finish_r2":(4,2),
+            "sint_magazine_l":(1,4),
+            "sint_magazine_r":(1,5),
+            "work_prg_no":(3,5),
+            "work_count":(4,5),                            
+        }
+        mould_top_table = TablePlusWidget(form_data=mould_top_table_form,pos_data=mould_top_table_pos)
         self.widgets['mould_top_table'] = mould_top_table
         # --------------------------
         mould_bottom_table_form={'init_size' : (6,6), 'slim_rows' : [],'slim_cols' : [],
@@ -271,7 +336,40 @@ class View(QMainWindow):
                         (5,0):[(1,1),"5", ['center']],
                         (6,0):[(1,1),"6", ['center']],
                     }}
-        mould_bottom_table = TablePlusWidget(form_data=mould_bottom_table_form)
+        mould_bottom_table_pos={
+            "step1_current":(1,1),
+            "turn_l1":(1,1),
+            "height_l1":(1,2),
+            "turn_r1":(1,3),
+            "height_r1":(1,4),
+            "prg_no1":(1,5),
+            "turn_l2":(2,1),
+            "height_l2":(2,2),
+            "turn_r2":(2,3),
+            "height_r2":(2,4),
+            "prg_no2":(2,5),
+            "turn_l3":(3,1),
+            "height_l3":(3,2),
+            "turn_r3":(3,3),
+            "height_r3":(3,4),
+            "prg_no3":(3,5),
+            "turn_l4":(4,1),
+            "height_l4":(4,2),
+            "turn_r4":(4,3),
+            "height_r4":(4,4),
+            "prg_no4":(4,5),
+            "turn_l5":(5,1),
+            "height_l5":(5,2),
+            "turn_r5":(5,3),
+            "height_r5":(5,4),
+            "prg_no5":(5,5),
+            "turn_l6":(6,1),
+            "height_l6":(6,2),
+            "turn_r6":(6,3),
+            "height_r6":(6,4),
+            "prg_no6":(6,5),
+        }
+        mould_bottom_table = TablePlusWidget(form_data=mould_bottom_table_form,pos_data=mould_bottom_table_pos)
         self.widgets['mould_bottom_table'] = mould_bottom_table
         # --------------------------
         mould_view_layout = QVBoxLayout()
