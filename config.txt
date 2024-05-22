@@ -1,0 +1,2 @@
+[DEFAULT]
+text = pyqt5 template

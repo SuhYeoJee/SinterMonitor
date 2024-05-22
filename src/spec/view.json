@@ -1,0 +1,38 @@
+{
+    "view":
+    {
+        "widgets":
+        [
+            "main",
+            "main_text",
+
+            "message",
+            "work_time",
+            "now_date",
+
+            "graph_table",
+            "graph_view",
+            
+            "prg_no",
+            "use_step",
+            "prg_name",
+            "program_table",
+
+            "mould_top_table",
+            "mould_bottom_table"
+
+        ],
+        "layouts":
+        [
+            "main",
+            "top_layout",
+            "graph_view_layout",
+            "program_view_layout",
+            "mould_view_layout"
+            
+        ],
+        "dialogs":
+        [
+        ]
+    }
+}
