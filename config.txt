@@ -1,2 +1,8 @@
 [DEFAULT]
 text = pyqt5 template
+plc_mac_address = B4-2E-99-14-30-5A
+plc_ip_address = 192.168.0.142
+pc_ip_address = 192.169.0.200
+subnet_mask = 255.255.255.0
+ip_gateway = 192.168.0.1
+plc_mcprotocol_port = 1400

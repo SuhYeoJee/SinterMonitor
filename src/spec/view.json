@@ -37,7 +37,10 @@
         ],
         "menus":
         [
-            "load_action"
+            "load_action",
+            "close_action",
+            "connect_action",
+            "disconnect_action"
         ]
     }
 }

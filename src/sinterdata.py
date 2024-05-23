@@ -11,6 +11,7 @@ class SinterData:
         if file_name: #load data
             self.file_name = file_name
             self.read_data_from_excel(file_name)
+            self.is_new:bool = False
         else: # new SinterData
             self.file_name = datetime.now().strftime("./result/%Y-%m-%d_%H-%M-%S.xlsx")
             self.data = {
@@ -136,6 +137,7 @@ class SinterData:
             "prg_no6":"D5569"
         }]
         }
+            self.is_new:bool = True
             self.save_data_to_excel() #make new file
     # -------------------------------------------------------------------------------------------
     def update_data(self,sheet_name:str,data:dict)->None:

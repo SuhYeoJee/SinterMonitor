@@ -29,21 +29,25 @@ class View(QMainWindow):
 
     # [menu] ===========================================================================================
     def create_menu(self):
+        menubar = self.menuBar()
+        # -------------------------------------------------------------------------------------------
         load_action = QAction('Load', self)
         self.menus["load_action"] = load_action
-        # save_action = QAction('Save', self)
-        # save_action.triggered.connect(self.save_action_triggered)
-
-        exit_action = QAction('Exit', self) #temp 이거 지우고 close 추가
-        exit_action.triggered.connect(self.close)
+        close_action = QAction('Close', self)
+        self.menus["close_action"] = load_action
         # --------------------------
-        menubar = self.menuBar()
         file_menu = menubar.addMenu('File')
-        afe = menubar.addMenu('실시간모니터')
         file_menu.addAction(load_action)
-        # file_menu.addAction(save_action)
-        file_menu.addSeparator()
-        file_menu.addAction(exit_action)
+        file_menu.addAction(close_action)
+        # -------------------------------------------------------------------------------------------
+        connect_action = QAction('Connect', self)
+        self.menus["connect_action"] = connect_action
+        disconnect_action = QAction('Disconnect', self)
+        self.menus["disconnect_action"] = disconnect_action
+        # --------------------------
+        connection_menu = menubar.addMenu('Connection')
+        connection_menu.addAction(connect_action)
+        connection_menu.addAction(disconnect_action)
     # -------------------------------------------------------------------------------------------
     def open_file_dialog(self)->str:
         options = QFileDialog.Options()
@@ -386,6 +390,11 @@ class View(QMainWindow):
         msg = self.wb.get_message_box('critical','Error','Connection failed')
         msg.exec_()
 
+    def show_disconnect_success_box(self):
+        msg = self.wb.get_message_box('info','Success','disConnection successful')
+        QTimer.singleShot(3000, msg.accept)
+        msg.exec_()
+
     # ===========================================================================================
     def set_value_by_label_and_text(self,table_name,datas:dict):
         pos_and_text = {v:datas[k] for k,v in self.table_spec[table_name.replace('_table','_pos')].items() if k in datas.keys()}
@@ -426,5 +435,4 @@ if __name__ == "__main__":
     app = QApplication([])
     v = View()
     v.show()
-    v.show_message_box()
     app.exec_()
