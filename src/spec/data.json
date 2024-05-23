@@ -1,12 +1,12 @@
 {
     "plc_reg_addr": {
         "common":{
-            "start":"D0",
-            "stop":"D1",
-            "mould_update":"D2",
-            "message":"D3",
-            "work_time":"D4",
-            "now_date":"D5"
+            "start":"D302 or 500",
+            "mould_update":"D5080",
+            "message":"D",
+            "work_time":"D36",
+                    "stop":"D1",
+                    "now_date":"파이썬시계"
         },
         "graph":{
             "prg_no":"D3000",

@@ -1,13 +1,13 @@
 if __debug__:
     import sys
-    sys.path.append(r"D:\Github\SinterMonitor")
+    sys.path.append(r"C:\Users\USER\Desktop\SinterMonitor")
 # -------------------------------------------------------------------------------------------
 from configparser import ConfigParser
 import json
 import pymcprotocol
 # ===========================================================================================
 
-DEBUG = True
+DEBUG = False
 
 
 class Model():
@@ -16,6 +16,11 @@ class Model():
         self.data_spec = self.get_data_spec()
         self.pymc3e = self.connect_pymc()
         self.T = 0
+
+    def __del__(self):
+        if self.pymc3e:
+            self.pymc3e.close()
+
     # -------------------------------------------------------------------------------------------
     def get_config(self,section:str="DEFAULT",config_path:str="config.txt",enc:str="utf-8"):
         config = ConfigParser()
@@ -42,6 +47,7 @@ class Model():
         if DEBUG:return pymc3e
         try:
             pymc3e.connect("192.168.0.142", 1400)
+            print("pymc3e.connect.ok")
         except: #연결실패
             print("pymc3e.connect.fail")
         return pymc3e
@@ -57,7 +63,7 @@ class Model():
         dataset:dict = self.data_spec["plc_reg_addr"].get(dataset_name,{})
         revers_dataset = {v:k for k,v in dataset.items()}
         addrs = list(dataset.values())
-        values = self.get_plc_data_by_addrs(addrs)
+        values = self.get_plc_data_by_addrs(addrs)[0] #temp
 
         return {revers_dataset[addrs[i]]:v for i,v in enumerate(values)}
     # --------------------------
@@ -72,5 +78,7 @@ class Model():
 # ===========================================================================================
 if __name__ == "__main__":
     m = Model()
-    print(m.get_plc_data_by_dataset_name("graph"))
-    print(m.get_plc_data_by_addr_names("mould",["complete_l1"]))
+    a = m.get_plc_data_by_addrs(["D348"])
+    print(a)
+    # print(m.get_plc_data_by_dataset_name("graph"))
+    # print(m.get_plc_data_by_addr_names("mould",["complete_l1"]))

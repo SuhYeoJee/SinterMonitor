@@ -1,6 +1,6 @@
 if __debug__:
     import sys
-    sys.path.append(r"D:\Github\SinterMonitor")
+    sys.path.append(r"C:\Users\USER\Desktop\SinterMonitor")
 # -------------------------------------------------------------------------------------------
 from src.module.pyqt_imports import *
 from src.module.window_builder import WindowBuilder
@@ -52,7 +52,7 @@ class View(QMainWindow):
         print('Save clicked')
     # ===========================================================================================
     def get_load_file_name(self): #temp
-        return "./result/" + "2024-05-23_01-01-56.xlsx"
+        return "./result/" + "2024-05-23_12-49-41.xlsx"
 
 # ===========================================================================================
     def get_top_layout(self)->QHBoxLayout:

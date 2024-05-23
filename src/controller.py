@@ -1,6 +1,6 @@
 if __debug__:
     import sys
-    sys.path.append(r"D:\Github\SinterMonitor")
+    sys.path.append(r"C:\Users\USER\Desktop\SinterMonitor")
 # -------------------------------------------------------------------------------------------
 from datetime import datetime
 import pandas as pd
@@ -11,7 +11,6 @@ from src.model import Model
 from src.view import View    
 from src.module.pyqt_imports import *
 from src.module.exceptions import *
-from igzg.utils import *
 # ===========================================================================================
 
 class SinterData:
@@ -186,6 +185,8 @@ class Controller:
         self.view.widgets['b1'].clicked.connect(self.start_monitoring)
         self.view.widgets['b2'].clicked.connect(self.stop_monitoring)
         self.view.widgets['b3'].clicked.connect(self.load_data)
+
+
     # [update] ===========================================================================================
     def update_and_save(self)->None: #every 1 sec
         print('update_and_save')
@@ -201,7 +202,7 @@ class Controller:
         self.timer.start()
     
     def get_plc_data_and_update_sint_data(self,dataset_name:str)->dict:
-        data = self.model.get_plc_data_by_dataset_name(dataset_name)
+        data = self.model.get_plc_data_by_dataset_name(dataset_name)     
         self.sint_data.update_data(dataset_name,data)
         return data
 
@@ -209,6 +210,8 @@ class Controller:
         self.view.widgets["graph_scene"].clear()
         self.sint_data = SinterData()
         program_data = self.get_plc_data_and_update_sint_data("program")
+        mould_top_data = self.get_plc_data_and_update_sint_data("mould_top")
+        mould_bottom_data = self.get_plc_data_and_update_sint_data("mould_bottom")          
         self.update_and_save() #set timer every 1 sec
 
     def stop_monitoring(self)->None:
