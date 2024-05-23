@@ -1,6 +1,6 @@
 if __debug__:
     import sys
-    sys.path.append(r"C:\Users\USER\Desktop\SinterMonitor")
+    sys.path.append(r"D:\Github\SinterMonitor")
 # -------------------------------------------------------------------------------------------
 from src.module.pyqt_imports import *
 from src.module.window_builder import WindowBuilder
@@ -13,6 +13,7 @@ class View(QMainWindow):
         self.widgets = {}
         self.layouts = {}
         self.dialogs = {}        
+        self.menus = {}        
         self.table_spec = {}
         # --------------------------
         screen = QDesktopWidget().screenGeometry() # 화면 크기 조정
@@ -28,31 +29,33 @@ class View(QMainWindow):
 
     # [menu] ===========================================================================================
     def create_menu(self):
-        open_action = QAction('Open', self)
-        open_action.triggered.connect(self.open_action_triggered)
+        load_action = QAction('Load', self)
+        self.menus["load_action"] = load_action
+        # save_action = QAction('Save', self)
+        # save_action.triggered.connect(self.save_action_triggered)
 
-        save_action = QAction('Save', self)
-        save_action.triggered.connect(self.save_action_triggered)
-
-        exit_action = QAction('Exit', self)
+        exit_action = QAction('Exit', self) #temp 이거 지우고 close 추가
         exit_action.triggered.connect(self.close)
         # --------------------------
         menubar = self.menuBar()
-        file_menu = menubar.addMenu('불러오기')
+        file_menu = menubar.addMenu('File')
         afe = menubar.addMenu('실시간모니터')
-        file_menu.addAction(open_action)
-        file_menu.addAction(save_action)
+        file_menu.addAction(load_action)
+        # file_menu.addAction(save_action)
         file_menu.addSeparator()
         file_menu.addAction(exit_action)
     # -------------------------------------------------------------------------------------------
-    def open_action_triggered(self):
-        print('Open clicked')
+    def open_file_dialog(self)->str:
+        options = QFileDialog.Options()
+        file_path, _ = QFileDialog.getOpenFileName(self, "Select File", "./result", "Excel Files (*.xlsx)", options=options)
+        if file_path:
+            self.file_path = file_path
+        else:
+            self.file_path = ''
+        return self.file_path
 
     def save_action_triggered(self):
         print('Save clicked')
-    # ===========================================================================================
-    def get_load_file_name(self): #temp
-        return "./result/" + "2024-05-23_12-49-41.xlsx"
 
 # ===========================================================================================
     def get_top_layout(self)->QHBoxLayout:
@@ -277,10 +280,11 @@ class View(QMainWindow):
                         (0,0):[(1,1),"Magazine", ['center']],
                         (1,0):[(1,1),"Start", ['center']],
                         (3,0):[(1,1),"Finish", ['center']],
-                        (1,3):[(2,1),"sintering Magazine", ['center']],
-                        (1,4):[(2,1),"", ['center']],
-                        (1,5):[(2,1),"", ['center']],
-                        (3,3):[(1,2),"work prg.no", ['center']],
+                        (0,3):[(2,1),"sintering Magazine", ['center']],
+                        (0,4):[(2,1),"", ['center']],
+                        (0,5):[(2,1),"", ['center']],
+                        (2,3):[(1,2),"work prg.no", ['center']],
+                        (3,3):[(1,2),"work set count", ['center']], #영문명 확인필 temp
                         (4,3):[(1,2),"work count", ['center']],
                     }}
         self.table_spec['mould_top_pos']={
@@ -294,9 +298,10 @@ class View(QMainWindow):
             "start_r2":(2,2),
             "finish_r1":(3,2),
             "finish_r2":(4,2),
-            "sint_magazine_l":(1,4),
-            "sint_magazine_r":(1,5),
-            "work_prg_no":(3,5),
+            "sint_magazine_l":(0,4),
+            "sint_magazine_r":(0,5),
+            "work_prg_no":(2,5),
+            "work_set_count":(3,5),                            
             "work_count":(4,5),                            
         }
         mould_top_table = TablePlusWidget(form_data=self.table_spec['mould_top_form'],pos_data=self.table_spec['mould_top_pos'])
@@ -371,89 +376,55 @@ class View(QMainWindow):
         main_layout.addLayout(self.layouts['graph_view_layout'],6)
         main_layout.addLayout(bottom_view_layout,4)
         return main_layout
+    
+    def show_connect_success_box(self):
+        msg = self.wb.get_message_box('info','Success','Connection successful')
+        QTimer.singleShot(3000, msg.accept)
+        msg.exec_()
+
+    def show_connect_failure_box(self):
+        msg = self.wb.get_message_box('critical','Error','Connection failed')
+        msg.exec_()
+
     # ===========================================================================================
     def set_value_by_label_and_text(self,table_name,datas:dict):
         pos_and_text = {v:datas[k] for k,v in self.table_spec[table_name.replace('_table','_pos')].items() if k in datas.keys()}
         self.widgets[table_name].fill_datas_position(pos_and_text)
 
     def set_graph(self,graph_raw_data:dict):
-        graph_data = {}
-        for k,v in graph_raw_data.items():
-            graph_data[k] = [(i * 50, val) for i, val in enumerate(v)]
+        scene:QGraphicsScene = self.widgets['graph_scene']
+        view:QGraphicsView = self.widgets['graph_view']
+        scene.clear()
+        # -------------------------------------------------------------------------------------------
+        def draw_line(scene, data, color):
+            pen = QPen(color)
+            pen.setWidth(2)
+            for i in range(len(data) - 1):
+                x1, y1 = i * 50, 300 - data[i] * 10
+                x2, y2 = (i + 1) * 50, 300 - data[i + 1] * 10
+                scene.addLine(x1, y1, x2, y2, pen)
+            return scene
+        # --------------------------
+        for line_name, line_data in graph_raw_data.items():
+            if 'current' in line_name:
+                color = Qt.red
+            elif 'press' in line_name:
+                color = Qt.black
+            else:
+                color = Qt.blue
+            draw_line(scene,line_data,color)
+        # --------------------------
+        def focus_on_right_end():
+            scene_rect = view.scene().itemsBoundingRect()
+            right_end = scene_rect.right()
+            view.ensureVisible(QRectF(right_end, 0, 1, 1))
+        focus_on_right_end()
+        # self.widgets['graph_view'].fitInView(scene.sceneRect(), Qt.KeepAspectRatio) 
 
-        scene = self.widgets['graph_scene']
-        x = len(graph_data["current"]) * 50
-
-        for line_name, line_data in graph_data.items():
-            if len(line_data) > 1:
-                previous_point = line_data[-2]
-                new_point = line_data[-1]
-                line = QGraphicsLineItem(previous_point[0], 100 - previous_point[1], new_point[0], 100 - new_point[1])
-                pen = Qt.black if 'current' in line_name else Qt.red if 'press' in line_name else Qt.blue
-                line.setPen(pen)
-                scene.addItem(line)
-        self.widgets['graph_view'].fitInView(scene.sceneRect(), Qt.KeepAspectRatio) 
-
-
-    def get_d(self):
-        return {'current': [69, 86, 103, 120, 137, 154],
-        'press': [71, 88, 105, 122, 139, 156],
-        'real_current': [70, 87, 104, 121, 138, 155],
-        'real_press': [72, 89, 106, 123, 140, 157],
-        'real_temp': [74, 91, 108, 125, 142, 159],
-        'temp': [73, 90, 107, 124, 141, 158]}        
-
-def set_graph(view,scene,graph_raw_data:dict={}):
-    # graph_raw_data = {'current': [69, 86, 103, 120, 137, 154],
-    # 'press': [71, 88, 105, 122, 139, 156],
-    # 'real_current': [70, 87, 104, 121, 138, 155],
-    # 'real_press': [72, 89, 106, 123, 140, 157],
-    # 'real_temp': [74, 91, 108, 125, 142, 159],
-    # 'temp': [73, 90, 107, 124, 141, 158]}        
-    # graph_data = {}
-    # for k,v in graph_raw_data.items():
-    #     graph_data[k] = [(i * 50, val) for i, val in enumerate(v)]
-
-    # for line_name, line_data in graph_data.items():
-    #     if len(line_data) > 1:
-    #         previous_point = line_data[-2]
-    #         new_point = line_data[-1]
-    #         line = QGraphicsLineItem(previous_point[0], 100 - previous_point[1], new_point[0], 100 - new_point[1])
-    #         pen = Qt.black if 'current' in line_name else Qt.red if 'press' in line_name else Qt.blue
-    #         line.setPen(pen)
-    #         scene.addItem(line)
-        
-    # -------------------------------------------------------------------------------------------
-    start_x, start_y = 50, 50
-    vertical_height = view.height()
-    view_width = view.width()
-    tick_size = 50
-    scene.setSceneRect(0, 0, view_width, vertical_height)
-    # x 축 그리기
-    scene.addLine(start_x, vertical_height-start_y, view_width - start_x, vertical_height-start_y)
-    # y 축 그리기 및 눈금 추가
-    scene.addLine(start_x, start_y, start_x, vertical_height - start_y)
-    for i in range(0, vertical_height + 1, tick_size):
-        tick = QGraphicsLineItem(start_x - 5, start_y + vertical_height - i, start_x + 5, start_y + vertical_height - i)
-        scene.addItem(tick)
-        text = scene.addText(str(i))
-        text.setFont(QFont("Arial", 8))
-        text.setPos(start_x - 30, start_y + vertical_height - i - 5)
-
-    # 그래프 그리기
-    data_points = [0, 50, 150, 100,  200, 300, 250]  # 예시 데이터 포인트
-    for i in range(len(data_points) - 1):
-        x1 = start_x + i * 50
-        y1 = start_y + vertical_height - data_points[i]
-        x2 = start_x + (i + 1) * 50
-        y2 = start_y + vertical_height - data_points[i + 1]
-        scene.addLine(x1, y1, x2, y2)
-
-    view.fitInView(scene.sceneRect(), Qt.KeepAspectRatio)  # scene을 viewport에 가득 채우도록 합니다.
 # ===========================================================================================
 if __name__ == "__main__":
     app = QApplication([])
     v = View()
     v.show()
-    set_graph(v.widgets['graph_view'],v.widgets['graph_scene'])
+    v.show_message_box()
     app.exec_()

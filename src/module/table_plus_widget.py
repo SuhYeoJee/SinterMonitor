@@ -96,7 +96,7 @@ class TablePlusWidget(QTableWidget):
 
         if 'editable' not in item_option: # 수정불가 회색으로 표시
             item.setFlags(item.flags() & ~item.flags() | ~Qt.ItemIsEditable)
-            item.setForeground(QColor(128,128,128))
+            # item.setForeground(QColor(128,128,128))
         # --------------------------
         if 'black' in item_option:
             item.setForeground(QColor(0,0,0))

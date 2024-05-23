@@ -87,6 +87,7 @@
             "sint_magazine_l":"D86",
             "sint_magazine_r":"D87",
             "work_prg_no":"D5578",
+            "work_set_count" : "D30",
             "work_count":"D5080"
         },
         "mould_bottom":{

@@ -36,6 +36,23 @@ class WindowBuilder():
         framed_layout.addWidget(self.get_box_frame_widget(layout))
         return framed_layout
 
+    def get_message_box(self,icon_name:str="",title:str="message",text:str="")->QMessageBox:
+        msg = QMessageBox()
+        if "info" in icon_name.lower(): 
+            icon = QMessageBox.Information
+        elif "warning" in icon_name.lower(): 
+            icon = QMessageBox.Warning
+        elif "critical" in icon_name.lower(): 
+            icon = QMessageBox.Critical
+        elif "question" in icon_name.lower(): 
+            icon = QMessageBox.Question
+        else: icon = QMessageBox.NoIcon
+ 
+        msg.setWindowTitle(title)
+        msg.setIcon(icon)
+        msg.setText(text)
+        return msg        
+
     def get_combo_box_widget(self, items, combo_func=lambda: None):
         combo_box = QComboBox()
         combo_box.addItems(items)

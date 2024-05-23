@@ -1,13 +1,14 @@
 if __debug__:
     import sys
-    sys.path.append(r"C:\Users\USER\Desktop\SinterMonitor")
+    sys.path.append(r"D:\Github\SinterMonitor")
 # -------------------------------------------------------------------------------------------
 from configparser import ConfigParser
 import json
 import pymcprotocol
 # ===========================================================================================
 
-DEBUG = False
+DEBUG = True # pymc3e return randint(1,10)
+# DEBUG = False
 
 
 class Model():
@@ -15,10 +16,9 @@ class Model():
         self.config = self.get_config()
         self.data_spec = self.get_data_spec()
         self.pymc3e = self.connect_pymc()
-        self.T = 0
 
     def __del__(self):
-        if self.pymc3e:
+        if not DEBUG and self.pymc3e:
             self.pymc3e.close()
 
     # -------------------------------------------------------------------------------------------
@@ -55,8 +55,8 @@ class Model():
     @ensure_connected
     def get_plc_data_by_addrs(self,words=[])->dict:
         if DEBUG:
-            self.T  += len(words)
-            return [x+self.T for x in range(len(words))]
+            from random import randint
+            return [randint(1,10) for x in range(len(words))],[]
         return self.pymc3e.randomread(word_devices=words,dword_devices=[])
     # --------------------------
     def get_plc_data_by_dataset_name(self,dataset_name:str)->dict:
@@ -80,5 +80,5 @@ if __name__ == "__main__":
     m = Model()
     a = m.get_plc_data_by_addrs(["D348"])
     print(a)
-    # print(m.get_plc_data_by_dataset_name("graph"))
+    print(m.get_plc_data_by_dataset_name("graph"))
     # print(m.get_plc_data_by_addr_names("mould",["complete_l1"]))
