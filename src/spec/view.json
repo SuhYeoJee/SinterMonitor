@@ -11,8 +11,7 @@
             "now_date",
 
             "graph_table",
-            "graph_view",
-            "graph_scene",
+            "graph",
             
             "prg_no",
             "use_step",

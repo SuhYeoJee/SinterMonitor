@@ -7,7 +7,7 @@ import json
 import pymcprotocol
 # ===========================================================================================
 
-DEBUG = True # pymc3e return randint(1,10)
+DEBUG = True # pymc3e return randint(1,6000)
 # DEBUG = False
 
 
@@ -81,7 +81,9 @@ class Model():
             except AttributeError:# AttributeError: 'Type3E' object has no attribute '_sock'
                 ... #temp #when debug
 
-    def is_connected(self)->bool:
+    def is_connected(self,result:bool=None)->bool:
+        if result is not None: #temp #debug
+            return result
         if DEBUG or (self.pymc3e and self.pymc3e._is_connected):
             return True
         else:
@@ -93,14 +95,15 @@ class Model():
     def _get_plc_data_by_addrs(self,words=[])->dict:
         if DEBUG:
             from random import randint
-            return [randint(1,10) for x in range(len(words))],[]
+            result = [randint(1,6000) for x in range(len(words))],[]
+            return result
         return self.pymc3e.randomread(word_devices=words,dword_devices=[])
     # --------------------------
     def get_plc_data_by_dataset_name(self,dataset_name:str)->dict:
         dataset:dict = self.data_spec["plc_reg_addr"].get(dataset_name,{})
         revers_dataset = {v:k for k,v in dataset.items()}
         addrs = list(dataset.values())
-        values = self._get_plc_data_by_addrs(addrs)[0] #temp
+        values = self._get_plc_data_by_addrs(addrs)[0]
 
         return {revers_dataset[addrs[i]]:v for i,v in enumerate(values)}
     # --------------------------
@@ -108,7 +111,7 @@ class Model():
         dataset:dict = {k:v for k,v in self.data_spec["plc_reg_addr"].get(dataset_name,{}).items() if k in addr_names}
         revers_dataset = {v:k for k,v in dataset.items()}
         addrs = list(dataset.values())
-        values = self._get_plc_data_by_addrs(addrs)
+        values = self._get_plc_data_by_addrs(addrs)[0]
         return {revers_dataset[addrs[i]]:v for i,v in enumerate(values)}
     # -------------------------------------------------------------------------------------------
     def get_plc_str_data_by_start_addr(self,start_addr,size:int=9)->str:

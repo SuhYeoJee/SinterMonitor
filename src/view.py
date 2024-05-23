@@ -2,6 +2,9 @@ if __debug__:
     import sys
     sys.path.append(r"D:\Github\SinterMonitor")
 # -------------------------------------------------------------------------------------------
+import pyqtgraph as pg
+import numpy as np
+# --------------------------
 from src.module.pyqt_imports import *
 from src.module.window_builder import WindowBuilder
 from src.module.table_plus_widget import TablePlusWidget
@@ -34,7 +37,7 @@ class View(QMainWindow):
         load_action = QAction('Load', self)
         self.menus["load_action"] = load_action
         close_action = QAction('Close', self)
-        self.menus["close_action"] = load_action
+        self.menus["close_action"] = close_action
         # --------------------------
         file_menu = menubar.addMenu('File')
         file_menu.addAction(load_action)
@@ -61,7 +64,10 @@ class View(QMainWindow):
     def save_action_triggered(self):
         print('Save clicked')
 
-# ===========================================================================================
+    def set_xrange(self,start,end)->None:
+        self.widgets['graph'].setXRange(start,end, padding=0.03)          
+
+    # -------------------------------------------------------------------------------------------
     def get_top_layout(self)->QHBoxLayout:
         top_layout = QHBoxLayout()
         self.widgets['message'] = self.wb.get_label("")
@@ -71,7 +77,14 @@ class View(QMainWindow):
         top_layout.addWidget(self.wb.get_vline_widget())
         self.widgets['now_date'] = self.wb.get_line_edit_widget(300)
         top_layout.addWidget(self.widgets['now_date'],2)
-        
+
+        def show_now():
+            current_datetime = QDateTime.currentDateTime()
+            display_text = current_datetime.toString('yyyy-MM-dd hh:mm:ss')
+            self.widgets['now_date'].setText(display_text)        
+        timer = QTimer(self)
+        timer.timeout.connect(show_now)
+        timer.start(1000)         
 
         self.widgets['b1'] = self.wb.get_button("b1")
         self.widgets['b2'] = self.wb.get_button("b2")
@@ -82,20 +95,7 @@ class View(QMainWindow):
 
         return top_layout
     # -------------------------------------------------------------------------------------------
-    #temp
-    def get_scale_layout(self)->QHBoxLayout:
-        graph_scale_layout = QHBoxLayout()
-        graph_scale_layout.addWidget(self.wb.get_label("표 눈금"))
-        return graph_scale_layout
-    def get_legend_layout(self)->QHBoxLayout:
-        graph_legend_layout = QHBoxLayout()
-        graph_legend_layout.addWidget(self.wb.get_label("범례")) #temp
-        return graph_legend_layout
-
     def get_graph_view_layout(self)->QVBoxLayout:
-        
-        # data3 = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10,1, 2, 3, 4, 5, 6, 7, 8, 9, 10,1, 2, 3, 4, 5, 6, 7, 8, 9, 10]
-        # view = self.create_multi_line_graph(data1, data2, data3)
         self.table_spec['graph_form']={'init_size' : (3,7), 'slim_rows' : [],'slim_cols' : [],'text_items' : {
                 (0,0):[(1,1),"PRG.NO", ['center']],
                 (0,1):[(1,1),"STEP", ['center']],
@@ -120,26 +120,29 @@ class View(QMainWindow):
             "real_time":(2,5),
             "total_time":(1,6),
         }
-        
-        graph_table = TablePlusWidget(form_data=self.table_spec['graph_form'], pos_data=self.table_spec['graph_pos'])
-        graph_table_layout = QHBoxLayout()
-        graph_table_layout.addWidget(graph_table)
-        self.widgets['graph_table'] = graph_table
         # --------------------------
-        graph_scale_layout = self.get_scale_layout()
-        graph_legend_layout = self.get_legend_layout()
-        graph_layout = QHBoxLayout()
-        graph_layout.addWidget(self.wb.get_box_frame_widget(graph_scale_layout),2)
-        self.widgets['graph_view'] = QGraphicsView()
-        self.widgets['graph_scene'] = QGraphicsScene()
-        self.widgets['graph_view'].setScene(self.widgets['graph_scene'])
-        graph_layout.addWidget(self.widgets['graph_view'],16)
-        graph_layout.addWidget(self.wb.get_box_frame_widget(graph_legend_layout),1)
+        self.widgets['graph'] = pg.PlotWidget()
+        self.widgets['graph'].setBackground('w')
+        self.widgets['graph'].getViewBox().setMouseEnabled(x=True, y=False)
+        self.widgets['graph'].setYRange(0,6000, padding=0.03)        
+        # -------------------------------------------------------------------------------------------
+        rightViewBox = pg.ViewBox()
+        rightViewBox.setYRange(300, 1300)
+        self.widgets['graph'].scene().addItem(rightViewBox)
         # --------------------------
-        graph_view_layout = QVBoxLayout()
-        graph_view_layout.addLayout(graph_layout,8)
-        graph_view_layout.addWidget(self.wb.get_box_frame_widget(graph_table_layout),2)
-        return graph_view_layout
+        self.widgets['graph'].getPlotItem().layout.addItem(rightViewBox, 2, 2)
+        self.widgets['graph'].getPlotItem().scene().addItem(rightViewBox)
+        self.widgets['graph'].getPlotItem().showAxis('right')
+        self.widgets['graph'].getPlotItem().getAxis('right').linkToView(rightViewBox)
+        legend = self.widgets['graph'].addLegend(offset=(0,1)) # 범례
+        rightViewBox.setXLink(self.widgets['graph'].getPlotItem())
+
+        self.widgets['graph_table'] = TablePlusWidget(form_data=self.table_spec['graph_form'], pos_data=self.table_spec['graph_pos'])
+        graph_layout = QVBoxLayout()
+        graph_layout.addWidget(self.widgets['graph'],8)
+        graph_layout.addWidget(self.widgets['graph_table'],2)
+        # --------------------------
+        return self.wb.get_box_frame_layout(graph_layout)
     # -------------------------------------------------------------------------------------------
     def get_program_view_layout(self)->QVBoxLayout:
         program_top_layout = QHBoxLayout()
@@ -380,7 +383,7 @@ class View(QMainWindow):
         main_layout.addLayout(self.layouts['graph_view_layout'],6)
         main_layout.addLayout(bottom_view_layout,4)
         return main_layout
-    
+    # -------------------------------------------------------------------------------------------
     def show_connect_success_box(self):
         msg = self.wb.get_message_box('info','Success','Connection successful')
         QTimer.singleShot(3000, msg.accept)
@@ -401,34 +404,29 @@ class View(QMainWindow):
         self.widgets[table_name].fill_datas_position(pos_and_text)
 
     def set_graph(self,graph_raw_data:dict):
-        scene:QGraphicsScene = self.widgets['graph_scene']
-        view:QGraphicsView = self.widgets['graph_view']
-        scene.clear()
+        self.widgets['graph'].clear()
         # -------------------------------------------------------------------------------------------
-        def draw_line(scene, data, color):
-            pen = QPen(color)
-            pen.setWidth(2)
-            for i in range(len(data) - 1):
-                x1, y1 = i * 50, 300 - data[i] * 10
-                x2, y2 = (i + 1) * 50, 300 - data[i + 1] * 10
-                scene.addLine(x1, y1, x2, y2, pen)
-            return scene
-        # --------------------------
         for line_name, line_data in graph_raw_data.items():
-            if 'current' in line_name:
-                color = Qt.red
-            elif 'press' in line_name:
-                color = Qt.black
+            if line_name == "current":
+                color, data_min, data_max = 'g',300,1300
+            elif line_name == "real_current":
+                color, data_min, data_max = 'k',300,1300
+            elif line_name == "press":
+                color, data_min, data_max = 'b',0,6000
+            elif line_name == "real_press":
+                color, data_min, data_max = 'c',0,6000
+            elif line_name == "temp":
+                color, data_min, data_max = 'r',300,1300
+            elif line_name == "real_temp":
+                color, data_min, data_max = 'm',300,1300
             else:
-                color = Qt.blue
-            draw_line(scene,line_data,color)
+                color, data_min, data_max = 'r',300,1300
+            scaled_data = np.interp(line_data, (data_min,data_max), (0, 6000))
+            self.widgets['graph'].plot(scaled_data, pen=color, name=line_name)
+        
+        self.widgets['graph'].setXRange(len(graph_raw_data.get("press",[])) -20,len(graph_raw_data.get("press",[])) + 3, padding=0.2)
+
         # --------------------------
-        def focus_on_right_end():
-            scene_rect = view.scene().itemsBoundingRect()
-            right_end = scene_rect.right()
-            view.ensureVisible(QRectF(right_end, 0, 1, 1))
-        focus_on_right_end()
-        # self.widgets['graph_view'].fitInView(scene.sceneRect(), Qt.KeepAspectRatio) 
 
 # ===========================================================================================
 if __name__ == "__main__":
