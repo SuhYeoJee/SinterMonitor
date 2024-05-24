@@ -1,11 +1,9 @@
 {
     "plc_reg_addr": {
         "common":{
-            "start":"D302 or 500",
-            "mould_update":"D5080",
-            "message":"D",
-            "work_time":"D36",
-                    "stop":"D1"
+            "start":"M46",
+            "mould_update":"M1111",
+            "work_time":"D36"
         },
         "graph":{
             "prg_no":"D3000",
@@ -18,7 +16,8 @@
             "real_temp":"D410",
             "time":"D504",
             "real_time":"D18",
-            "total_time":"D26"
+            "total_time":"D26",
+            "elec_distance":"D9020"
         },
         "program":{
             "prg_no":"D3000",
@@ -86,7 +85,7 @@
             "sint_magazine_l":"D86",
             "sint_magazine_r":"D87",
             "work_prg_no":"D5578",
-            "work_set_count" : "D30",
+            "work_set_count" : "D5082",
             "work_count":"D5080"
         },
         "mould_bottom":{

@@ -70,7 +70,7 @@ class WindowBuilder():
         layout.setAlignment(Qt.AlignRight | Qt.AlignVCenter)
         # --------------------------
         line_edit = QLineEdit()
-        line_edit.setFixedWidth(200)
+        line_edit.setFixedWidth(100)
 
         if domains:
             completer = QCompleter([' ' + str(x) for x in domains])

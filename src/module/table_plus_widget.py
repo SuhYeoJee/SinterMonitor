@@ -114,9 +114,9 @@ class TablePlusWidget(QTableWidget):
         #     font = QFont(HMKMRHD, 20)
         #     item.setFont(font)
         # --------------------------
-        if 'center' in item_option:
-            item.setTextAlignment(Qt.AlignCenter)
-        elif 'right' in item_option:
+        # if 'center' in item_option:
+        item.setTextAlignment(Qt.AlignCenter)
+        if 'right' in item_option:
             item.setTextAlignment(Qt.AlignRight | Qt.AlignVCenter)
         elif 'left' in item_option:
             item.setTextAlignment(Qt.AlignLeft | Qt.AlignVCenter)

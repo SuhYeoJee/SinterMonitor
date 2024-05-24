@@ -13,7 +13,7 @@ import pyqtgraph as pg
 class Worker(QThread):
     data_generated = pyqtSignal()
 
-    def __init__(self,time:int=500): #temp -> 5000
+    def __init__(self,time:int=5000): #temp -> 5000
         super().__init__()
         self.running = True
         self.time = time
@@ -52,8 +52,8 @@ class Controller(QObject):
 
     def mouse_clicked(self, event):
         pos = event.pos()
+        pos.setX(pos.x() + 100)
         view = self.view.widgets['graph'].plotItem.vb
-
         pos_data = view.mapSceneToView(pos)
         x_val = int(round(pos_data.x()))
         # -------------------------------------------------------------------------------------------
@@ -105,9 +105,11 @@ class Controller(QObject):
         self.view.setWindowTitle("check start signal")
         if self.is_monitoring: 
             return
-        start = self.model.get_plc_data_by_addr_names('common',['start'])
         def is_started()->bool:
-            return True if start['start'] % 15 == 0 else False
+            # return True # debug
+            start_signal = self.model.get_plc_bool_by_addr_name("start")
+            print('start',start_signal)
+            return start_signal
         
         if is_started():
           self.stop_waiting_start_signal()
@@ -137,13 +139,23 @@ class Controller(QObject):
     def update_and_save(self)->None: #every 1 sec
         self.view.setWindowTitle("monitoring")
         def is_mould_changed()->bool:
+            module_signal = self.model.get_plc_bool_by_addr_name("mould_update")
+            print('module',module_signal)
             # flag = common_data["mould_update"] ! self.old_mould_update
             self.old_mould_update = common_data["mould_update"]
-            return self.old_mould_update % 3 == 0
+            return module_signal
         
+        # def is_stoped()->bool:
+        #     stop_signal = self.model.get_plc_bool_by_addr_name("stop")
+        #     print('stop',stop_signal)
+        #     return stop_signal
+        
+
         def is_stoped()->bool:
-            print(int(common_data["start"])%15)
-            return False if int(common_data["start"])%15!=0 else True
+            # return True # debug
+            stop_signal = not self.model.get_plc_bool_by_addr_name("start")
+            print('stop',stop_signal)
+            return stop_signal        
 
         common_data = self._get_plc_data_and_update_sint_data("common")
         graph_data = self._get_plc_data_and_update_sint_data("graph")
@@ -172,7 +184,17 @@ class Controller(QObject):
         self.sint_data = SinterData()
         program_data = self._get_plc_data_and_update_sint_data("program")
         mould_top_data = self._get_plc_data_and_update_sint_data("mould_top")
-        mould_bottom_data = self._get_plc_data_and_update_sint_data("mould_bottom")          
+        mould_bottom_data = self._get_plc_data_and_update_sint_data("mould_bottom")    
+        
+        def show_now():
+            current_datetime = QDateTime.currentDateTime()
+            display_text = current_datetime.toString('yyyy-MM-dd hh:mm:ss')
+            if self.is_monitoring:
+                self.view.widgets['now_date'].setText(display_text)        
+        timer = QTimer(self)
+        timer.timeout.connect(show_now)
+        timer.start(1000)         
+      
         if not self.worker.isRunning():
             self.worker = Worker()  # Worker가 주기적으로 update_and_save 호출
             self.worker.data_generated.connect(self.update_and_save)  
@@ -208,12 +230,19 @@ class Controller(QObject):
         graph_data = {
             'current':[],'real_current':[],
             'press':[],'real_press':[],
-            'temp':[],'real_temp':[]
+            'temp':[],'real_temp':[],
+            'elec_distance':[]
         }
         for x in self.sint_data.data['graph']:
             for k in graph_data.keys():
                 if x[k] != '':
                     graph_data[k].append(x[k])
+
+        # from numpy import interp,array #scaling
+        # scaled_temp, scaled_real_temp = list(interp(array([graph_data['temp'],graph_data['real_temp']]), (300, 1300), (0, 6000)))
+        # graph_data['temp'] = list(scaled_temp)
+        # graph_data['real_temp'] = list(scaled_real_temp)
+
         self.view.set_graph(graph_data)
 
     def load_data(self):

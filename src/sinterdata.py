@@ -17,7 +17,6 @@ class SinterData:
             self.data = {
         "common": [{
             "start":"",
-            "stop":"",
             "mould_update":"",
             "message":"",
             "work_time":"",
@@ -34,7 +33,8 @@ class SinterData:
             "real_temp":"",
             "time":"",
             "real_time":"",
-            "total_time":""
+            "total_time":"",
+            "elec_distance":""
         }],
         "program":[{
             "prg_no":"",
@@ -144,8 +144,14 @@ class SinterData:
         update_target = self.data.get(sheet_name,False)
         if not update_target:
             self.data[sheet_name]=[]
+        if sheet_name == "graph":
+            e_d = data["elec_distance"]
+            e_d = e_d / 100
+            data["elec_distance"] = e_d
+            
         new_value = {k:v for k,v in self.data[sheet_name][-1].items()}
         new_value.update(data)
+        new_value.update({'date':datetime.now().strftime("%Y.%m.%d %H:%M:%S")})
         update_target.append(new_value)
     # --------------------------
     def save_data_to_excel(self):

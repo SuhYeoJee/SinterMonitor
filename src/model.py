@@ -40,13 +40,12 @@ class Model():
         return None
 
     def _change_ip(self):
+        return # no root
         adapter_name = self._find_adapter_name_by_mac(self.config.get("plc_mac_address",""))
         import subprocess
         try:
-            cmd = f'''netsh interface ip set address name="{adapter_name}" \
-                  static {self.config.get('pc_ip_address',"192.168.0.200")} \
-                    {self.config.get('subnet_mask',"255.255.255.0")} \
-                    {self.config.get('ip_gateway',"192.168.0.1")}'''
+            cmd = f'''netsh interface ip set address name="{adapter_name}" static {self.config.get('pc_ip_address',"192.168.0.200")} {self.config.get('subnet_mask',"255.255.255.0")} {self.config.get('ip_gateway',"192.168.0.1")}'''
+            print(cmd)
             subprocess.run(cmd, shell=True, check=True)
             return True
         except subprocess.CalledProcessError as e:
@@ -99,6 +98,14 @@ class Model():
             return result
         return self.pymc3e.randomread(word_devices=words,dword_devices=[])
     # --------------------------
+    @_ensure_connected
+    def _get_plc_bit_by_addr(self,addr:str)->list:
+        if DEBUG:
+            from random import randint
+            result = randint(0,1)
+            return [result]
+        return self.pymc3e.batchread_bitunits(addr,1)
+    # --------------------------
     def get_plc_data_by_dataset_name(self,dataset_name:str)->dict:
         dataset:dict = self.data_spec["plc_reg_addr"].get(dataset_name,{})
         revers_dataset = {v:k for k,v in dataset.items()}
@@ -113,6 +120,15 @@ class Model():
         addrs = list(dataset.values())
         values = self._get_plc_data_by_addrs(addrs)[0]
         return {revers_dataset[addrs[i]]:v for i,v in enumerate(values)}
+    
+    # --------------------------
+    def get_plc_bool_by_addr_name(self,addr_name:str)->bool:
+        addr:str = self.data_spec["plc_reg_addr"]["common"].get(addr_name,"")
+        if not addr : return None
+        flag =  self._get_plc_bit_by_addr(addr)[0]
+        return True if flag else False
+
+
     # -------------------------------------------------------------------------------------------
     def get_plc_str_data_by_start_addr(self,start_addr,size:int=9)->str:
         if DEBUG:
@@ -129,9 +145,10 @@ class Model():
 # ===========================================================================================
 if __name__ == "__main__":
     m = Model()
-    a = m._get_plc_data_by_addrs(["D348"])
-    print(a)
-    print(m.get_plc_data_by_dataset_name("graph"))
-    a = m.get_plc_str_data_by_start_addr("")
-    print(a)
+    print(m._get_plc_data_by_addrs(["D5082"]))
+    # print(m.get_plc_data_by_dataset_name("graph"))
+    # print(m.get_plc_str_data_by_start_addr("D3060"))
+    # print(m.get_plc_bool_by_addr_name('start'))
+    # print(m.get_plc_bool_by_addr_name('stop'))
+    # print(m.get_plc_bool_by_addr_name('mould_update'))
     # print(m.get_plc_data_by_addr_names("mould",["complete_l1"]))

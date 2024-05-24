@@ -20,7 +20,7 @@ class View(QMainWindow):
         self.table_spec = {}
         # --------------------------
         screen = QDesktopWidget().screenGeometry() # 화면 크기 조정
-        self.resize(int(screen.width() * 0.5), int(screen.height() * 0.73))
+        self.resize(int(screen.width() * 0.7), int(screen.height() * 0.8))
         self.setWindowTitle("window_title")
         self.create_menu()
         # --------------------------
@@ -85,14 +85,6 @@ class View(QMainWindow):
         self.widgets['now_date'] = self.wb.get_line_edit_widget(300)
         top_layout.addWidget(self.widgets['now_date'],2)
 
-        def show_now():
-            current_datetime = QDateTime.currentDateTime()
-            display_text = current_datetime.toString('yyyy-MM-dd hh:mm:ss')
-            self.widgets['now_date'].setText(display_text)        
-        timer = QTimer(self)
-        timer.timeout.connect(show_now)
-        timer.start(1000)         
-
         self.widgets['b1'] = self.wb.get_button("b1")
         self.widgets['b2'] = self.wb.get_button("b2")
         self.widgets['b3'] = self.wb.get_button("b3")
@@ -126,6 +118,7 @@ class View(QMainWindow):
             "time":(1,5),
             "real_time":(2,5),
             "total_time":(1,6),
+            "elec_distance":(2,6),
         }
         # --------------------------
         self.widgets['graph'] = pg.PlotWidget()
@@ -133,16 +126,27 @@ class View(QMainWindow):
         self.widgets['graph'].getViewBox().setMouseEnabled(x=True, y=False)
         self.widgets['graph'].setYRange(0,6000, padding=0.03)        
         # -------------------------------------------------------------------------------------------
-        rightViewBox = pg.ViewBox()
-        rightViewBox.setYRange(300, 1300)
-        self.widgets['graph'].scene().addItem(rightViewBox)
-        # --------------------------
-        self.widgets['graph'].getPlotItem().layout.addItem(rightViewBox, 2, 2)
-        self.widgets['graph'].getPlotItem().scene().addItem(rightViewBox)
+        # rightViewBox = pg.ViewBox()
+        # rightViewBox.setYRange(300, 1300)
+        # self.widgets['graph'].scene().addItem(rightViewBox)
+        # # --------------------------
+        # self.widgets['graph'].getPlotItem().layout.addItem(rightViewBox, 2, 2)
+        # self.widgets['graph'].getPlotItem().scene().addItem(rightViewBox)
         self.widgets['graph'].getPlotItem().showAxis('right')
-        self.widgets['graph'].getPlotItem().getAxis('right').linkToView(rightViewBox)
+        # self.widgets['graph'].getPlotItem().getAxis('right').linkToView(rightViewBox)
+        # 오른쪽 축의 눈금 간격 설정
+        right_axis = self.widgets['graph'].getPlotItem().getAxis('right')
+        right_ticks = [(0, '300'), (600, '400'), (1200, '500'), (1800, '600'), (2400, '700'), (3000, '800'), (3600, '900'), (4200, '1000'), (4800, '1100'), (5400, '1200'), (6000, '1300')]
+        right_axis.setTicks([right_ticks])
+        right_axis.setWidth(100)
+
+        # 왼쪽 축의 눈금 간격 설정
+        left_axis = self.widgets['graph'].getPlotItem().getAxis('left')
+        left_ticks = [(0, '0'), (600, '600'), (1200, '1200'), (1800, '1800'), (2400, '2400'), (3000, '3000'), (3600, '3600'), (4200, '4200'), (4800, '4800'), (5400, '5400'), (6000, '6000')]
+        left_axis.setTicks([left_ticks])
+        left_axis.setWidth(100)
         legend = self.widgets['graph'].addLegend(offset=(0,1)) # 범례
-        rightViewBox.setXLink(self.widgets['graph'].getPlotItem())
+        # rightViewBox.setXLink(self.widgets['graph'].getPlotItem())
 
         self.widgets['graph_table'] = TablePlusWidget(form_data=self.table_spec['graph_form'], pos_data=self.table_spec['graph_pos'])
         graph_layout = QVBoxLayout()
@@ -321,7 +325,7 @@ class View(QMainWindow):
         mould_top_table = TablePlusWidget(form_data=self.table_spec['mould_top_form'],pos_data=self.table_spec['mould_top_pos'])
         self.widgets['mould_top_table'] = mould_top_table
         # --------------------------
-        self.table_spec['mould_bottom_form']={'init_size' : (6,6), 'slim_rows' : [],'slim_cols' : [],
+        self.table_spec['mould_bottom_form']={'init_size' : (7,6), 'slim_rows' : [],'slim_cols' : [],
                     'text_items' : {
                         (0,1):[(1,1),"Turn", ['center']],
                         (0,2):[(1,1),"Height", ['center']],
