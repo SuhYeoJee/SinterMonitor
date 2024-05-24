@@ -30,6 +30,13 @@ class View(QMainWindow):
         self.widgets['main'].setLayout(self.layouts['main'])
         self.setCentralWidget(self.widgets['main'])
 
+    def clear_view(self):
+        self.widgets['graph'].clear()
+        self.widgets['graph_table'].fill_form()
+        self.widgets['program_table'].fill_form()
+        self.widgets['mould_top_table'].fill_form()
+        self.widgets['mould_bottom_table'].fill_form()
+
     # [menu] ===========================================================================================
     def create_menu(self):
         menubar = self.menuBar()

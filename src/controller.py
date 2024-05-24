@@ -120,6 +120,7 @@ class Controller(QObject):
         self.observer.stop()  # observer 스레드 종료
 
     def connect_plc(self):
+        self.view.clear_view()
         if not self.model.is_connected():
             self.model._connect_pymc() #연결
         self.check_connect_and_start_waiting() #시작신호 대기
@@ -225,7 +226,7 @@ class Controller(QObject):
     def close_data(self):
         if self.sint_data and not self.sint_data.is_new:
             self.sint_data = None
-            # 화면 초기화
+        self.view.clear_view()
 
 # ===========================================================================================
 

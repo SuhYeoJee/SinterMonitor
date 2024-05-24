@@ -8,6 +8,7 @@
 
 ## 실시간 표시
 - 시작신호
+- 몰드신호
 
 #### 관리자권한 패키징
 pyinstaller -w --uac-admin admin.py
@@ -24,7 +25,7 @@ pyinstaller -w --uac-admin admin.py
 #### prg>prg_name 값 T027 -> 12372 - 완료
 
 #### 그래프 수정사항
-- 시간(가로)축 조정 토글버튼 
+- 시간(가로)축 조정 토글 배율 
 
 #### 연결과 동작시작 시퀀스 - 완료
 
