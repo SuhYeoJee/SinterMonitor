@@ -7,11 +7,12 @@ from src.module.exceptions import *
 class TablePlusWidget(QTableWidget):
     def __init__(self, border_data=[], \
                 form_data={'init_size' : (1,1), 'slim_rows' : [],'slim_cols' : [],'text_items' : {},}, \
-                pos_data={}):
+                pos_data={}, unit_data={}):
         super().__init__()
         self.border_data = border_data
         self.form_data = form_data
         self.pos_data = pos_data
+        self.unit_data = unit_data
         self.fill_form()
 
     # 열/행 세팅

@@ -35,7 +35,6 @@ class Controller(QObject):
         self.sint_data:SinterData = None
         self.worker = Worker()
         self.observer = Worker()
-        self.old_mould_update = None
         self.line = None
         self.is_monitoring:bool = False
         self.connect_view_func()
@@ -47,8 +46,8 @@ class Controller(QObject):
         self.view.menus['connect_action'].triggered.connect(self.connect_plc)
         self.view.menus['disconnect_action'].triggered.connect(self.disconnect_plc)
         self.view.widgets['graph'].scene().sigMouseClicked.connect(self.mouse_clicked)
-        self.view.widgets['b1'].clicked.connect(lambda:self.view.set_xrange(0,100))
-        self.view.widgets['b2'].clicked.connect(lambda:self.view.set_xrange(0,10))
+        self.view.widgets['b1'].clicked.connect(lambda:self.view.set_xrange()) # 1당5초, 전체뷰
+        self.view.widgets['b2'].clicked.connect(lambda:self.view.set_xrange(60))  # 5분뷰? 10분에 120
 
     def mouse_clicked(self, event):
         pos = event.pos()
@@ -100,18 +99,19 @@ class Controller(QObject):
             self.observer.data_generated.connect(self.check_start_signal)  
             self.observer.start()
     
+    def is_running(self)->bool:
+        return True # debug
+        start_signal = self.model.get_plc_bool_by_addr_name("start")
+        print('running',start_signal)
+        return start_signal
+
     @pyqtSlot()
     def check_start_signal(self)->None: #every 1 sec
         self.view.setWindowTitle("check start signal")
         if self.is_monitoring: 
             return
-        def is_started()->bool:
-            # return True # debug
-            start_signal = self.model.get_plc_bool_by_addr_name("start")
-            print('start',start_signal)
-            return start_signal
-        
-        if is_started():
+
+        if self.is_running():
           self.stop_waiting_start_signal()
           self.start_monitoring()
           self.is_monitoring = True
@@ -141,34 +141,20 @@ class Controller(QObject):
         def is_mould_changed()->bool:
             module_signal = self.model.get_plc_bool_by_addr_name("mould_update")
             print('module',module_signal)
-            # flag = common_data["mould_update"] ! self.old_mould_update
-            self.old_mould_update = common_data["mould_update"]
             return module_signal
-        
-        # def is_stoped()->bool:
-        #     stop_signal = self.model.get_plc_bool_by_addr_name("stop")
-        #     print('stop',stop_signal)
-        #     return stop_signal
-        
-
-        def is_stoped()->bool:
-            # return True # debug
-            stop_signal = not self.model.get_plc_bool_by_addr_name("start")
-            print('stop',stop_signal)
-            return stop_signal        
 
         common_data = self._get_plc_data_and_update_sint_data("common")
         graph_data = self._get_plc_data_and_update_sint_data("graph")
+        program_data = self._get_plc_data_and_update_sint_data("program")
         if is_mould_changed():
             mould_top_data = self._get_plc_data_and_update_sint_data("mould_top")
             mould_bottom_data = self._get_plc_data_and_update_sint_data("mould_bottom")
         else:
             self.sint_data.update_data("mould_top",self.sint_data.data['mould_top'][-1])
             self.sint_data.update_data("mould_bottom",self.sint_data.data['mould_bottom'][-1])
-            
         self.sint_data.save_data_to_excel()
         self.set_view()
-        if is_stoped():
+        if not self.is_running():
             self.stop_monitoring()        
         
     def _get_plc_data_and_update_sint_data(self,dataset_name:str)->dict:
@@ -184,7 +170,7 @@ class Controller(QObject):
         self.sint_data = SinterData()
         program_data = self._get_plc_data_and_update_sint_data("program")
         mould_top_data = self._get_plc_data_and_update_sint_data("mould_top")
-        mould_bottom_data = self._get_plc_data_and_update_sint_data("mould_bottom")    
+        mould_bottom_data = self._get_plc_data_and_update_sint_data("mould_bottom")
         
         def show_now():
             current_datetime = QDateTime.currentDateTime()
@@ -231,17 +217,12 @@ class Controller(QObject):
             'current':[],'real_current':[],
             'press':[],'real_press':[],
             'temp':[],'real_temp':[],
-            'elec_distance':[]
+            'elec_distance':[], 'date':[]
         }
         for x in self.sint_data.data['graph']:
             for k in graph_data.keys():
                 if x[k] != '':
                     graph_data[k].append(x[k])
-
-        # from numpy import interp,array #scaling
-        # scaled_temp, scaled_real_temp = list(interp(array([graph_data['temp'],graph_data['real_temp']]), (300, 1300), (0, 6000)))
-        # graph_data['temp'] = list(scaled_temp)
-        # graph_data['real_temp'] = list(scaled_real_temp)
 
         self.view.set_graph(graph_data)
 

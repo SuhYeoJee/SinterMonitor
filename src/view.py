@@ -18,9 +18,11 @@ class View(QMainWindow):
         self.dialogs = {}        
         self.menus = {}        
         self.table_spec = {}
+        self.xrange_size:int = 60
+        self.graph_size:int = 0
         # --------------------------
         screen = QDesktopWidget().screenGeometry() # 화면 크기 조정
-        self.resize(int(screen.width() * 0.7), int(screen.height() * 0.8))
+        self.resize(int(screen.width() * 0.7), int(screen.width() * 0.7 * 0.7))
         self.setWindowTitle("window_title")
         self.create_menu()
         # --------------------------
@@ -68,12 +70,6 @@ class View(QMainWindow):
             self.file_path = ''
         return self.file_path
 
-    def save_action_triggered(self):
-        print('Save clicked')
-
-    def set_xrange(self,start,end)->None:
-        self.widgets['graph'].setXRange(start,end, padding=0.03)          
-
     # -------------------------------------------------------------------------------------------
     def get_top_layout(self)->QHBoxLayout:
         top_layout = QHBoxLayout()
@@ -120,35 +116,45 @@ class View(QMainWindow):
             "total_time":(1,6),
             "elec_distance":(2,6),
         }
+        self.table_spec['graph_unit']={
+            "current":'%',
+            "real_current":'A',
+            "press":'00kg',
+            "real_press":'00kg',
+            "temp":'°C',
+            "real_temp":'°C',
+            "time":'sec',
+            "real_time":'sec',
+            "total_time":'sec',
+        }        
         # --------------------------
         self.widgets['graph'] = pg.PlotWidget()
+        self.widgets['graph'].showGrid(x=True, y=True)
         self.widgets['graph'].setBackground('w')
         self.widgets['graph'].getViewBox().setMouseEnabled(x=True, y=False)
-        self.widgets['graph'].setYRange(0,6000, padding=0.03)        
-        # -------------------------------------------------------------------------------------------
-        # rightViewBox = pg.ViewBox()
-        # rightViewBox.setYRange(300, 1300)
-        # self.widgets['graph'].scene().addItem(rightViewBox)
-        # # --------------------------
-        # self.widgets['graph'].getPlotItem().layout.addItem(rightViewBox, 2, 2)
-        # self.widgets['graph'].getPlotItem().scene().addItem(rightViewBox)
+        self.widgets['graph'].setYRange(0,6000, padding=0.03)
         self.widgets['graph'].getPlotItem().showAxis('right')
-        # self.widgets['graph'].getPlotItem().getAxis('right').linkToView(rightViewBox)
-        # 오른쪽 축의 눈금 간격 설정
+        # --------------------------
         right_axis = self.widgets['graph'].getPlotItem().getAxis('right')
-        right_ticks = [(0, '300'), (600, '400'), (1200, '500'), (1800, '600'), (2400, '700'), (3000, '800'), (3600, '900'), (4200, '1000'), (4800, '1100'), (5400, '1200'), (6000, '1300')]
+        right_ticks = [(0, '0, 0'), (600, '50, 20'), (1200, '100, 40'), (1800, '150, 60'), (2400, '200, 80'), (3000, '250, 100'), \
+                       (3600, '300, 120'), (4200, '350, 140'), (4800, '400, 160'), (5400, '450, 180'), (6000, '500, 200')]
         right_axis.setTicks([right_ticks])
         right_axis.setWidth(100)
-
-        # 왼쪽 축의 눈금 간격 설정
+        # --------------------------
         left_axis = self.widgets['graph'].getPlotItem().getAxis('left')
-        left_ticks = [(0, '0'), (600, '600'), (1200, '1200'), (1800, '1800'), (2400, '2400'), (3000, '3000'), (3600, '3600'), (4200, '4200'), (4800, '4800'), (5400, '5400'), (6000, '6000')]
+        left_ticks = [(0, '0, 300'), (600, '600, 400'), (1200, '1200, 500'), (1800, '1800, 600'), (2400, '2400, 700'), (3000, '3000, 800'), \
+                      (3600, '3600, 900'), (4200, '4200, 1000'), (4800, '4800, 1100'), (5400, '5400, 1200'), (6000, '6000, 1300')]
         left_axis.setTicks([left_ticks])
         left_axis.setWidth(100)
+        # --------------------------
+        # bottom_axis = self.widgets['graph'].getPlotItem().getAxis('bottom')
+        # bottom_ticks = [(0, '0, 300'), (600, '600, 400'), (1200, '1200, 500'), (1800, '1800, 600'), (2400, '2400, 700'), (3000, '3000, 800'), \
+        #               (3600, '3600, 900'), (4200, '4200, 1000'), (4800, '4800, 1100'), (5400, '5400, 1200'), (6000, '6000, 1300')]
+        # bottom_axis.setTicks([bottom_ticks])
+        # --------------------------
         legend = self.widgets['graph'].addLegend(offset=(0,1)) # 범례
-        # rightViewBox.setXLink(self.widgets['graph'].getPlotItem())
-
-        self.widgets['graph_table'] = TablePlusWidget(form_data=self.table_spec['graph_form'], pos_data=self.table_spec['graph_pos'])
+        # --------------------------
+        self.widgets['graph_table'] = TablePlusWidget(form_data=self.table_spec['graph_form'], pos_data=self.table_spec['graph_pos'],unit_data=self.table_spec['graph_unit'])
         graph_layout = QVBoxLayout()
         graph_layout.addWidget(self.widgets['graph'],8)
         graph_layout.addWidget(self.widgets['graph_table'],2)
@@ -411,7 +417,7 @@ class View(QMainWindow):
 
     # ===========================================================================================
     def set_value_by_label_and_text(self,table_name,datas:dict):
-        pos_and_text = {v:datas[k] for k,v in self.table_spec[table_name.replace('_table','_pos')].items() if k in datas.keys()}
+        pos_and_text = {v:str(datas[k])+self.widgets[table_name].unit_data.get(k,'') for k,v in self.table_spec[table_name.replace('_table','_pos')].items() if k in datas.keys()}
         self.widgets[table_name].fill_datas_position(pos_and_text)
 
     def set_graph(self,graph_raw_data:dict):
@@ -419,29 +425,47 @@ class View(QMainWindow):
         # -------------------------------------------------------------------------------------------
         for line_name, line_data in graph_raw_data.items():
             if line_name == "current":
-                color, data_min, data_max = 'g',300,1300
+                color, data_min, data_max = (150, 200, 150),0,500
             elif line_name == "real_current":
-                color, data_min, data_max = 'k',300,1300
+                color, data_min, data_max = (0, 255, 0),0,500
             elif line_name == "press":
-                color, data_min, data_max = 'b',0,6000
+                color, data_min, data_max = (150, 150, 200),0,6000
             elif line_name == "real_press":
-                color, data_min, data_max = 'c',0,6000
+                color, data_min, data_max = (0, 0, 255),0,6000
             elif line_name == "temp":
-                color, data_min, data_max = 'r',300,1300
+                color, data_min, data_max = (200, 150, 150),300,1300
             elif line_name == "real_temp":
-                color, data_min, data_max = 'm',300,1300
+                color, data_min, data_max = (255, 0, 0),300,1300
+            elif line_name == "elec_distance":
+                color, data_min, data_max = 'orange',0,200
             else:
-                color, data_min, data_max = 'r',300,1300
+                continue
             scaled_data = np.interp(line_data, (data_min,data_max), (0, 6000))
-            self.widgets['graph'].plot(scaled_data, pen=color, name=line_name)
-        
-        self.widgets['graph'].setXRange(len(graph_raw_data.get("press",[])) -20,len(graph_raw_data.get("press",[])) + 3, padding=0.2)
+            self.widgets['graph'].plot(scaled_data, pen=pg.mkPen(color=color, width=2), name=line_name)
 
-        # --------------------------
+        self.graph_size = len(graph_raw_data.get("press",[]))
+        self.set_xrange()
+        self.set_xlabel()
+
+    def set_xrange(self,xrange_size=None):
+        if xrange_size:
+            self.xrange_size = xrange_size
+        else:
+            self.xrange_size = self.graph_size     
+        x_range1 = self.graph_size  - self.xrange_size
+        x_range1 = x_range1 if x_range1 > 0 else 0
+        x_range2 = self.graph_size  + 2 if x_range1 else self.xrange_size + 2
+        self.widgets['graph'].setXRange(x_range1,x_range2, padding=0) 
+
+    def set_xlabel(self):
+        bottom_axis = self.widgets['graph'].getPlotItem().getAxis('bottom')
+        step = 6 #30초간격
+        bottom_axis.setTicks([[(idx,str(idx*5)) for idx in range(0,self.graph_size,step)]])               
 
 # ===========================================================================================
 if __name__ == "__main__":
     app = QApplication([])
     v = View()
+    v.set_graph({"current":[50,100,150,200,250,],"elec_distance":[]})
     v.show()
     app.exec_()
