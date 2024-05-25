@@ -3,7 +3,8 @@
         "common":{
             "start":"M46",
             "mould_update":"M1111",
-            "work_time":"D36"
+            "work_time":"D36",
+            "total_alarm":"M352"
         },
         "graph":{
             "prg_no":"D3000",
@@ -120,5 +121,34 @@
             "height_r6":"D5596",
             "prg_no6":"D5569"
         }
+    },
+    "alarm":{
+        "M300" : "WATER FLOW MISSING !",
+        "M301" : "Emergency Stop - OP PANEL !",
+        "M302" : "HYD Pump Overload !",
+        "M303" : "Vacuum Pump Over load !",
+        "M304" : "Blower Motor Overload !",
+        "M305" : "Magazine Rotation Motor OCR !",
+        "M306" : "1 AXIS SERVO DRIVE ALARM !",
+        "M307" : "2 AXIS SERVO DRIVE ALARM !",
+        "M308" : "3 AXIS SERVO DRIVE ALARM !",
+        "M309" : "Transformer Over temp' !",
+        "M310" : "Emergency Stop - EXT !",
+        "M311" : "1 AXIS - Pos' Control Error !",
+        "M312" : "2 AXIS - Pos' Control Error !",
+        "M313" : "3 AXIS - Pos' Control Error !",
+        "M314" : "Electrode not UP Position !",
+        "M315" : "Electrode not UP Position !",
+        "M316" : "DOOR NOT OPEN !",
+        "M317" : "DOOR NOT CLOSE !",
+        "M318" : "Electrode Position Fault !",
+        "M319" : "PLC COUNT MODULE 이상!",
+        "M320" : "Work Finish !",
+        "M321" : "Mould Clamp Fault !",
+        "M322" : "PYROMETER READING ERROR !",
+        "M323" : "Mould Unloading Error-END Mould ",
+        "M324" : "Sintering Dimension - LOW !",
+        "M325" : "Vacuum Pump Oil Change !",
+        "M536" : "HYD PRESS CLOSE LIMIT !"        
     }
 }

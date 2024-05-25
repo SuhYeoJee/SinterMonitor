@@ -36,8 +36,7 @@ class Controller(QObject):
         self.timer = Worker()
         self.worker = Worker()
         self.observer = Worker()
-        self.state:str = 'view'
-        self.is_view_mode:bool = True
+        self.alarmer = Worker()
         self.line = None
         self.is_monitoring:bool = False
         self.alarms = {}
@@ -52,6 +51,13 @@ class Controller(QObject):
     #         alarm_table = self.view.widgets['alarm_table']
     #         alarm_table.fill_datas_position({(i,1):'asdf'})
 
+    def show_alarms(self): #알람이 하나이상 있을떄 호출
+        # 세부 알람 읽기
+        # 세부 알람 코드 가져오기
+        # alarms에 시간과 매핑
+        # alarms값 뷰 - 테이블에 전달
+        ...
+
     def connect_view_func(self):
         self.view.menus['load_action'].triggered.connect(self.load_data)
         self.view.menus['close_action'].triggered.connect(self.close_data)
@@ -61,14 +67,15 @@ class Controller(QObject):
         self.view.widgets['b1'].clicked.connect(lambda:self.view.set_xrange('all')) # 1당5초, 전체뷰
         self.view.widgets['b2'].clicked.connect(lambda:self.view.set_xrange(60))  # 5분뷰? 10분에 120
 
-    def set_config_values(self):
-        adapter_name, ip_addr = self.model.find_adapter_name_and_ip()
-        adapter_name = str(adapter_name) if adapter_name else 'adapter not found'
-        ip_addr = str(ip_addr) if ip_addr else ''
-        connection = 'Connect' if self.model.is_connected() else 'Disconnect'
-        state = self.state if self.is_view_mode == 'monitoring' else 'view'
-        mode = 'view' if self.is_view_mode else 'monitoring'
-        self.view.widgets['config_table'].fill_datas_position_label({'ip_change':f'[{adapter_name}] {ip_addr}','connection': connection,'mode': mode,'state': state})
+    def set_config_values(self,connect=False, mode='',state=''):
+        # self.set_config_values('mode','state')
+        if connect:
+            adapter_name, ip_addr = self.model.find_adapter_name_and_ip()
+            adapter_name = str(adapter_name) if adapter_name else 'adapter not found'
+            ip_addr = str(ip_addr) if ip_addr else ''
+            connection = 'Connect' if self.model.is_connected() else 'Disconnect'
+            self.view.widgets['config_table'].fill_datas_position_label({'ip_change':f'[{adapter_name}] {ip_addr}','connection': connection})
+        self.view.widgets['config_table'].fill_datas_position_label({'mode': mode,'state': state})
 
     def mouse_clicked(self, event):
         pos = event.pos()
@@ -119,6 +126,7 @@ class Controller(QObject):
     @pyqtSlot()
     def start_waiting_start_signal(self):
         print('&start_waiting_start_signal')
+        self.set_config_values(True,'monitoring','waiting start signal')
         self.view.setWindowTitle("waiting start signal")
         if not self.observer.isRunning():
             self.observer = Worker(1000)  # observer가 주기적으로 check_start_signal 호출
@@ -135,6 +143,7 @@ class Controller(QObject):
     @pyqtSlot()
     def check_start_signal(self)->None: #every 1 sec
         print('&check_start_signal')
+        self.set_config_values(False,'monitoring','stop waiting start signal')
         self.view.setWindowTitle("check start signal")
         if self.is_monitoring: 
             return
@@ -147,8 +156,10 @@ class Controller(QObject):
     @pyqtSlot()
     def stop_waiting_start_signal(self):
         print('&stop_waiting_start_signal')
+        self.set_config_values(True,'monitoring','stop waiting start signal')
         self.view.setWindowTitle("stop waiting start signal")
         self.observer.stop()  # observer 스레드 종료
+        self.observer.wait()  # observer 스레드 종료
 
     def connect_plc(self):
         print('&connect_plc')
@@ -169,6 +180,7 @@ class Controller(QObject):
     @pyqtSlot()
     def update_and_save(self)->None: #every 1 sec
         print('&update_and_save')
+        self.set_config_values(False,'monitoring','monitoring')
         self.view.setWindowTitle("monitoring")
         def is_mould_changed()->bool:
             module_signal = self.model.get_plc_bool_by_addr_name("mould_update")
@@ -213,6 +225,7 @@ class Controller(QObject):
     @pyqtSlot()
     def start_monitoring(self)->None:
         print('&start_monitoring')
+        self.set_config_values(False,'monitoring','start_monitoring')
         self.view.setWindowTitle("start monitoring")
         # self.view.widgets["graph_scene"].clear()
         # temp
@@ -234,10 +247,13 @@ class Controller(QObject):
     @pyqtSlot()
     def stop_monitoring(self)->None:
         print('&stop_monitoring')
+        self.set_config_values(False,'monitoring','stop_monitoring')
         self.view.setWindowTitle("stop monitoring")
         if self.is_monitoring:
             self.timer.stop()  # timer 스레드 종료
             self.worker.stop()  # Worker 스레드 종료
+            self.timer.wait()  # timer 스레드 종료
+            self.worker.wait()  # Worker 스레드 종료
             if self.sint_data:
                 self.sint_data.save_data_to_excel()
             self.is_monitoring = False
@@ -281,6 +297,7 @@ class Controller(QObject):
             self.stop_monitoring()
         file_name = self.view.open_file_dialog()
         self.view.setWindowTitle(f"load data - {file_name}")
+        self.set_config_values(False,'viewer',file_name)
         self.sint_data = SinterData(file_name)
         self.set_view()
 
@@ -288,6 +305,7 @@ class Controller(QObject):
         print('&close_data')
         if self.sint_data and not self.sint_data.is_new:
             self.sint_data = None
+        self.set_config_values(False,'viewer','')
         self.view.clear_view()
 
 # ===========================================================================================

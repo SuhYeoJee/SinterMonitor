@@ -1,27 +1,27 @@
-WATER FLOW MISSING !	M300
-Emergency Stop - OP PANEL !	M301
-HYD Pump Overload !	M302
-Vacuum Pump Over load !	M303
-Blower Motor Overload !	M304
-Magazine Rotation Motor OCR !	M305
-1 AXIS SERVO DRIVE ALARM !	M306
-2 AXIS SERVO DRIVE ALARM !	M307
-3 AXIS SERVO DRIVE ALARM !	M308
-Transformer Over temp' !	M309
-Emergency Stop - EXT !	M310
-1 AXIS - Pos' Control Error !	M311
-2 AXIS - Pos' Control Error !	M312
-3 AXIS - Pos' Control Error !	M313
-Electrode not UP Position !	M314
-Electrode not UP Position !	M315
-DOOR NOT OPEN !	M316
-DOOR NOT CLOSE !	M317
-Electrode Position Fault !	M318
-PLC COUNT MODULE 이상!	M319
-Work Finish !	M320
-Mould Clamp Fault !	M321
-PYROMETER READING ERROR !	M322
-Mould Unloading Error-END Mould 	M323
-Sintering Dimension - LOW !	M324
-Vacuum Pump Oil Change !	M325
-HYD PRESS CLOSE LIMIT !	M536
+"M300" : "WATER FLOW MISSING !",
+"M301" : "Emergency Stop - OP PANEL !",
+"M302" : "HYD Pump Overload !",
+"M303" : "Vacuum Pump Over load !",
+"M304" : "Blower Motor Overload !",
+"M305" : "Magazine Rotation Motor OCR !",
+"M306" : "1 AXIS SERVO DRIVE ALARM !",
+"M307" : "2 AXIS SERVO DRIVE ALARM !",
+"M308" : "3 AXIS SERVO DRIVE ALARM !",
+"M309" : "Transformer Over temp' !",
+"M310" : "Emergency Stop - EXT !",
+"M311" : "1 AXIS - Pos' Control Error !",
+"M312" : "2 AXIS - Pos' Control Error !",
+"M313" : "3 AXIS - Pos' Control Error !",
+"M314" : "Electrode not UP Position !",
+"M315" : "Electrode not UP Position !",
+"M316" : "DOOR NOT OPEN !",
+"M317" : "DOOR NOT CLOSE !",
+"M318" : "Electrode Position Fault !",
+"M319" : "PLC COUNT MODULE 이상!",
+"M320" : "Work Finish !",
+"M321" : "Mould Clamp Fault !",
+"M322" : "PYROMETER READING ERROR !",
+"M323" : "Mould Unloading Error-END Mould ",
+"M324" : "Sintering Dimension - LOW !",
+"M325" : "Vacuum Pump Oil Change !",
+"M536" : "HYD PRESS CLOSE LIMIT !"

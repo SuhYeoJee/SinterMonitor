@@ -89,6 +89,9 @@ class Model():
         else:
             return False
 
+    def get_alaram_strs(self,alaram_bits:dict):
+        alaram_bits = {"M300":0,"M301":1}
+        return [self.data_spec['alarm'].get(k,'') for k,v in alaram_bits.items() if v]
 
 
     # [PLC 데이터 접근] -------------------------------------------------------------------------------------------
@@ -104,7 +107,7 @@ class Model():
     def _get_plc_bit_by_addr(self,addr:str)->list:
         if DEBUG:
             from random import choice
-            result = choice([0,1])
+            result = choice([0,1,1,1,1,1,1,1])
             return [result]
         return self.pymc3e.batchread_bitunits(addr,1)
     # --------------------------
