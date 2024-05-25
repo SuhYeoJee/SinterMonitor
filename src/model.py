@@ -4,6 +4,8 @@ if __debug__:
 # -------------------------------------------------------------------------------------------
 from configparser import ConfigParser
 import json
+import psutil
+import socket
 import pymcprotocol
 # ===========================================================================================
 
@@ -31,17 +33,16 @@ class Model():
             data = json.load(file)
         return data     
     # [이더넷 IP 변경] ===========================================================================================
-    def _find_adapter_name_by_mac(self,mac_address):
-        import psutil
+    def find_adapter_name_and_ip(self):
         for name, addresses in psutil.net_if_addrs().items():
             for address in addresses:
-                if address.address.lower() == mac_address.lower():
-                    return name
-        return None
+                if address.address.lower() == self.config.get("plc_mac_address","").lower():
+                    return name, address
+        return None, None
 
-    def _change_ip(self):
-        return # no root
-        adapter_name = self._find_adapter_name_by_mac(self.config.get("plc_mac_address",""))
+    def _change_ip(self)->bool:
+        return True# no root
+        adapter_name, ip_addr = self.find_adapter_name_and_ip()
         import subprocess
         try:
             cmd = f'''netsh interface ip set address name="{adapter_name}" static {self.config.get('pc_ip_address',"192.168.0.200")} {self.config.get('subnet_mask',"255.255.255.0")} {self.config.get('ip_gateway',"192.168.0.1")}'''
@@ -89,6 +90,7 @@ class Model():
             return False
 
 
+
     # [PLC 데이터 접근] -------------------------------------------------------------------------------------------
     @_ensure_connected
     def _get_plc_data_by_addrs(self,words=[])->dict:
@@ -101,8 +103,8 @@ class Model():
     @_ensure_connected
     def _get_plc_bit_by_addr(self,addr:str)->list:
         if DEBUG:
-            from random import randint
-            result = randint(0,1)
+            from random import choice
+            result = choice([0,1])
             return [result]
         return self.pymc3e.batchread_bitunits(addr,1)
     # --------------------------

@@ -22,7 +22,7 @@ class View(QMainWindow):
         self.graph_size:int = 0
         # --------------------------
         screen = QDesktopWidget().screenGeometry() # 화면 크기 조정
-        self.resize(int(screen.width() * 0.7), int(screen.width() * 0.7 * 0.7))
+        self.resize(int(screen.width() * 0.7), int(screen.width() * 0.7 * 0.85))
         self.setWindowTitle("Sinter Monitor")
         self.create_menu()
         # --------------------------
@@ -139,18 +139,13 @@ class View(QMainWindow):
         right_ticks = [(0, '0, 0'), (600, '50, 20'), (1200, '100, 40'), (1800, '150, 60'), (2400, '200, 80'), (3000, '250, 100'), \
                        (3600, '300, 120'), (4200, '350, 140'), (4800, '400, 160'), (5400, '450, 180'), (6000, '500, 200')]
         right_axis.setTicks([right_ticks])
-        right_axis.setWidth(100)
+        right_axis.setWidth(130)
         # --------------------------
         left_axis = self.widgets['graph'].getPlotItem().getAxis('left')
         left_ticks = [(0, '0, 300'), (600, '600, 400'), (1200, '1200, 500'), (1800, '1800, 600'), (2400, '2400, 700'), (3000, '3000, 800'), \
                       (3600, '3600, 900'), (4200, '4200, 1000'), (4800, '4800, 1100'), (5400, '5400, 1200'), (6000, '6000, 1300')]
         left_axis.setTicks([left_ticks])
-        left_axis.setWidth(100)
-        # --------------------------
-        # bottom_axis = self.widgets['graph'].getPlotItem().getAxis('bottom')
-        # bottom_ticks = [(0, '0, 300'), (600, '600, 400'), (1200, '1200, 500'), (1800, '1800, 600'), (2400, '2400, 700'), (3000, '3000, 800'), \
-        #               (3600, '3600, 900'), (4200, '4200, 1000'), (4800, '4800, 1100'), (5400, '5400, 1200'), (6000, '6000, 1300')]
-        # bottom_axis.setTicks([bottom_ticks])
+        left_axis.setWidth(130)
         # --------------------------
         legend = self.widgets['graph'].addLegend(offset=(0,1)) # 범례
         # --------------------------
@@ -385,21 +380,75 @@ class View(QMainWindow):
         mould_view_layout.addWidget(mould_bottom_table,6)
         return mould_view_layout
     # -------------------------------------------------------------------------------------------
-    def get_main_layout(self):
+    def get_main_layout(self)->QHBoxLayout:
         self.layouts['top_layout'] = self.get_top_layout()
         self.layouts['graph_view_layout'] = self.get_graph_view_layout()
         self.layouts['program_view_layout'] = self.get_program_view_layout()
         self.layouts['mould_view_layout'] = self.get_mould_view_layout()
+        self.layouts['alarm_view_layout'] = self.get_alarm_view_layout()
+        self.layouts['config_view_layout'] = self.get_config_view_layout()
         # --------------------------
         bottom_view_layout = QHBoxLayout()
         bottom_view_layout.addWidget(self.wb.get_box_frame_widget(self.layouts['program_view_layout']),1)
         bottom_view_layout.addWidget(self.wb.get_box_frame_widget(self.layouts['mould_view_layout']),1)
         # --------------------------
+        side_view_layout = QVBoxLayout()
+        side_view_layout.addWidget(self.wb.get_box_frame_widget(self.layouts['alarm_view_layout']),4)
+        side_view_layout.addWidget(self.wb.get_box_frame_widget(self.layouts['config_view_layout']),1)
+        side_view_layout.addStretch(2)
+        # --------------------------
         main_layout = QVBoxLayout()
         main_layout.addWidget(self.wb.get_box_frame_widget(self.layouts['top_layout']))
         main_layout.addLayout(self.layouts['graph_view_layout'],6)
         main_layout.addLayout(bottom_view_layout,4)
-        return main_layout
+        # --------------------------
+        layout = QHBoxLayout()
+        layout.addLayout(main_layout,8)
+        layout.addLayout(side_view_layout,2)
+        return layout
+    # -------------------------------------------------------------------------------------------
+    def get_alarm_view_layout(self)->QHBoxLayout:
+        alarm_view_layout = QHBoxLayout()
+        self.table_spec['alarm_form'] ={'init_size' : (21,9), 'slim_rows' : [],'slim_cols' : [],
+                    'text_items' : {
+                        (0,0):[(1,1),"seq", ['center']], (0,1):[(1,3),"time", ['center']], (0,4):[(1,5),"info", ['center']],
+                    }}
+        self.table_spec['alarm_form']['text_items'].update({(idx,0):[(1,1),"",['center']] for idx in range(1,21)})
+        self.table_spec['alarm_form']['text_items'].update({(idx,1):[(1,3),"",['center']] for idx in range(1,21)})
+        self.table_spec['alarm_form']['text_items'].update({(idx,4):[(1,5),"",['center']] for idx in range(1,21)})
+        self.table_spec['alarm_pos']={}
+        self.table_spec['alarm_pos'].update({f'seq{idx}':(idx,0) for idx in range(1,21)})
+        self.table_spec['alarm_pos'].update({f'time{idx}':(idx,1) for idx in range(1,21)})
+        self.table_spec['alarm_pos'].update({f'info{idx}':(idx,4) for idx in range(1,21)})
+        # --------------------------
+        alarm_table = TablePlusWidget(form_data=self.table_spec['alarm_form'],pos_data=self.table_spec['alarm_pos'])
+        self.widgets['alarm_table'] = alarm_table
+        alarm_view_layout.addWidget(alarm_table)
+        return alarm_view_layout
+
+    def get_config_view_layout(self)->QHBoxLayout:
+        config_view_layout = QHBoxLayout()
+        self.table_spec['config_form'] ={'init_size' : (4,4), 'slim_rows' : [],'slim_cols' : [],
+                    'text_items' : {
+                        (0,0):[(1,1),"mode", ['center']],
+                        (1,0):[(1,1),"ip change", ['center']],
+                        (2,0):[(1,1),"connection", ['center']],
+                        (3,0):[(1,1),"state", ['center']],
+                        (0,1):[(1,3),"", ['center']],
+                        (1,1):[(1,3),"", ['center']],
+                        (2,1):[(1,3),"", ['center']],
+                        (3,1):[(1,3),"", ['center']],
+                    }}
+        self.table_spec['config_pos']={
+            "mode":(0,1),
+            "ip_change":(1,1),
+            "connection":(2,1),
+            "state":(3,1),
+        }
+        config_table = TablePlusWidget(form_data=self.table_spec['config_form'],pos_data=self.table_spec['config_pos'])
+        self.widgets['config_table'] = config_table
+        config_view_layout.addWidget(config_table)
+        return config_view_layout
     # -------------------------------------------------------------------------------------------
     def show_connect_success_box(self):
         msg = self.wb.get_message_box('info','Success','Connection successful')
@@ -417,7 +466,6 @@ class View(QMainWindow):
 
     # ===========================================================================================
     def set_value_by_label_and_text(self,table_name,datas:dict):
-
         #line_edit
         if 'common' in table_name:
             self.widgets['work_time'].setText(str(datas.get('work_time','')))
@@ -428,7 +476,7 @@ class View(QMainWindow):
             self.widgets['prg_no'].setText(str(datas.get('prg_no','')))
             self.widgets['use_step'].setText(str(datas.get('use_step','')))
             self.widgets['prg_name'].setText(str(datas.get('prg_name','')))
-
+        # --------------------------
         # table
         pos_and_text = {v:str(datas[k])+self.widgets[table_name].unit_data.get(k,'') for k,v in self.table_spec[table_name.replace('_table','_pos')].items() if k in datas.keys()}
         self.widgets[table_name].fill_datas_position(pos_and_text)
@@ -456,7 +504,7 @@ class View(QMainWindow):
                 continue
             scaled_data = np.interp(line_data, (data_min,data_max), (0, 6000))
             self.widgets['graph'].plot(scaled_data, pen=pg.mkPen(color=color, width=2), name=line_name)
-
+        # --------------------------
         self.graph_size = len(graph_raw_data.get("press",[]))
         self.set_xrange()
         self.set_xlabel()

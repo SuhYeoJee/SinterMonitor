@@ -13,7 +13,7 @@ import pyqtgraph as pg
 class Worker(QThread):
     data_generated = pyqtSignal()
 
-    def __init__(self,time:int=500): #temp -> 5000
+    def __init__(self,time:int=5000): #temp -> 5000
         super().__init__()
         self.running = True
         self.time = time
@@ -33,13 +33,25 @@ class Controller(QObject):
         self.model:Model = Model()
         self.view:View = View()
         self.sint_data:SinterData = None
+        self.timer = Worker()
         self.worker = Worker()
         self.observer = Worker()
+        self.state:str = 'view'
+        self.is_view_mode:bool = True
         self.line = None
         self.is_monitoring:bool = False
+        self.alarms = {}
         self.connect_view_func()
         # self.check_connect_and_start_waiting()
-        
+
+    # def update_alarm_table(self, value):
+    #     self.data.append(value)  # 새로운 값을 데이터 리스트에 추가
+    #     if len(self.data) > 10:
+    #         self.data.pop(0)  # 리스트의 길이가 10을 초과하면 가장 오래된 값을 제거
+    #     for i, val in enumerate(self.data):
+    #         alarm_table = self.view.widgets['alarm_table']
+    #         alarm_table.fill_datas_position({(i,1):'asdf'})
+
     def connect_view_func(self):
         self.view.menus['load_action'].triggered.connect(self.load_data)
         self.view.menus['close_action'].triggered.connect(self.close_data)
@@ -48,6 +60,15 @@ class Controller(QObject):
         self.view.widgets['graph'].scene().sigMouseClicked.connect(self.mouse_clicked)
         self.view.widgets['b1'].clicked.connect(lambda:self.view.set_xrange('all')) # 1당5초, 전체뷰
         self.view.widgets['b2'].clicked.connect(lambda:self.view.set_xrange(60))  # 5분뷰? 10분에 120
+
+    def set_config_values(self):
+        adapter_name, ip_addr = self.model.find_adapter_name_and_ip()
+        adapter_name = str(adapter_name) if adapter_name else 'adapter not found'
+        ip_addr = str(ip_addr) if ip_addr else ''
+        connection = 'Connect' if self.model.is_connected() else 'Disconnect'
+        state = self.state if self.is_view_mode == 'monitoring' else 'view'
+        mode = 'view' if self.is_view_mode else 'monitoring'
+        self.view.widgets['config_table'].fill_datas_position_label({'ip_change':f'[{adapter_name}] {ip_addr}','connection': connection,'mode': mode,'state': state})
 
     def mouse_clicked(self, event):
         pos = event.pos()
@@ -86,9 +107,10 @@ class Controller(QObject):
 
     # [waiting] ===========================================================================================
     def check_connect_and_start_waiting(self):
+        print('&check_connect_and_start_waiting')
         try:
             if self.model.is_connected():
-                self.view.show_connect_success_box()
+                # self.view.show_connect_success_box()
                 self.start_waiting_start_signal()
             else: raise
         except:
@@ -96,6 +118,7 @@ class Controller(QObject):
 
     @pyqtSlot()
     def start_waiting_start_signal(self):
+        print('&start_waiting_start_signal')
         self.view.setWindowTitle("waiting start signal")
         if not self.observer.isRunning():
             self.observer = Worker(1000)  # observer가 주기적으로 check_start_signal 호출
@@ -103,13 +126,15 @@ class Controller(QObject):
             self.observer.start()
     
     def is_running(self)->bool:
-        return True # debug
+        print('&is_running')
+        # return True # debug
         start_signal = self.model.get_plc_bool_by_addr_name("start")
         print('running',start_signal)
         return start_signal
 
     @pyqtSlot()
     def check_start_signal(self)->None: #every 1 sec
+        print('&check_start_signal')
         self.view.setWindowTitle("check start signal")
         if self.is_monitoring: 
             return
@@ -121,16 +146,19 @@ class Controller(QObject):
 
     @pyqtSlot()
     def stop_waiting_start_signal(self):
+        print('&stop_waiting_start_signal')
         self.view.setWindowTitle("stop waiting start signal")
         self.observer.stop()  # observer 스레드 종료
 
     def connect_plc(self):
+        print('&connect_plc')
         self.view.clear_view()
         if not self.model.is_connected():
             self.model._connect_pymc() #연결
         self.check_connect_and_start_waiting() #시작신호 대기
 
     def disconnect_plc(self):
+        print('&disconnect_plc')
         self.stop_monitoring()
         self.stop_waiting_start_signal()
         self.model.disconnect_pymc() #연결 해제
@@ -140,6 +168,7 @@ class Controller(QObject):
     # [monitoring] ===========================================================================================
     @pyqtSlot()
     def update_and_save(self)->None: #every 1 sec
+        print('&update_and_save')
         self.view.setWindowTitle("monitoring")
         def is_mould_changed()->bool:
             module_signal = self.model.get_plc_bool_by_addr_name("mould_update")
@@ -161,6 +190,7 @@ class Controller(QObject):
             self.stop_monitoring()        
         
     def _get_plc_data_and_update_sint_data(self,dataset_name:str)->dict:
+        print('&_get_plc_data_and_update_sint_data')
         data = self.model.get_plc_data_by_dataset_name(dataset_name)
         if 'program' in dataset_name and data.get('prg_name',None):
             prg_name_start_addr = self.model.data_spec['plc_reg_addr']['program']['prg_name']
@@ -173,7 +203,16 @@ class Controller(QObject):
         return data
 
     @pyqtSlot()
+    def show_now(self):
+        print('&show_now')
+        current_datetime = QDateTime.currentDateTime()
+        display_text = current_datetime.toString('yyyy-MM-dd hh:mm:ss')
+        if self.is_monitoring:
+            self.view.widgets['date'].setText(display_text)      
+
+    @pyqtSlot()
     def start_monitoring(self)->None:
+        print('&start_monitoring')
         self.view.setWindowTitle("start monitoring")
         # self.view.widgets["graph_scene"].clear()
         # temp
@@ -182,14 +221,10 @@ class Controller(QObject):
         mould_top_data = self._get_plc_data_and_update_sint_data("mould_top")
         mould_bottom_data = self._get_plc_data_and_update_sint_data("mould_bottom")
         
-        def show_now():
-            current_datetime = QDateTime.currentDateTime()
-            display_text = current_datetime.toString('yyyy-MM-dd hh:mm:ss')
-            if self.is_monitoring:
-                self.view.widgets['date'].setText(display_text)        
-        timer = QTimer(self)
-        timer.timeout.connect(show_now)
-        timer.start(1000)         
+        if not self.timer.isRunning():
+            self.timer = Worker(1000)  # timer 주기적으로 show_now 호출
+            self.timer.data_generated.connect(self.show_now)  
+            self.timer.start()        
       
         if not self.worker.isRunning():
             self.worker = Worker()  # Worker가 주기적으로 update_and_save 호출
@@ -198,16 +233,19 @@ class Controller(QObject):
 
     @pyqtSlot()
     def stop_monitoring(self)->None:
+        print('&stop_monitoring')
         self.view.setWindowTitle("stop monitoring")
         if self.is_monitoring:
+            self.timer.stop()  # timer 스레드 종료
             self.worker.stop()  # Worker 스레드 종료
             if self.sint_data:
                 self.sint_data.save_data_to_excel()
             self.is_monitoring = False
-            self.start_waiting_start_signal() # 시작신호 대기
+            self.check_connect_and_start_waiting() # 시작신호 대기
 
     # [set data view] ===========================================================================================
     def set_view(self):
+        print('&set_view')
         if not self.sint_data:return
         def set_value_if_exist(dataset_name):
             # try:
@@ -223,6 +261,7 @@ class Controller(QObject):
         self._set_graph()
 
     def _set_graph(self):
+        print('&_set_graph')
         graph_data = {
             'current':[],'real_current':[],
             'press':[],'real_press':[],
@@ -237,6 +276,7 @@ class Controller(QObject):
         self.view.set_graph(graph_data)
 
     def load_data(self):
+        print('&load_data')
         if self.sint_data and self.sint_data.is_new:
             self.stop_monitoring()
         file_name = self.view.open_file_dialog()
@@ -245,6 +285,7 @@ class Controller(QObject):
         self.set_view()
 
     def close_data(self):
+        print('&close_data')
         if self.sint_data and not self.sint_data.is_new:
             self.sint_data = None
         self.view.clear_view()

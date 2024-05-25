@@ -53,6 +53,30 @@ class TablePlusWidget(QTableWidget):
         finally:
             self.resizeColumnsToContents()
 
+    def fill_datas_position_label(self,datas:dict={}):
+        try:
+            if len(datas) == 0:
+                raise NoTableDataError
+            for pos_label,text in datas.items():
+
+                try:
+                    pos = self.pos_data[pos_label]
+                except :
+                    return
+
+                try:
+                    item_option = self.form_data['text_items'][pos][2]
+                except KeyError:
+                    item_option = []
+                except IndexError:
+                    item_option = []
+                self.set_and_get_cell_text_item(pos,text,item_option)
+
+
+        except NoTableDataError:
+            self.init_table(1,1)
+            self.setItem(0, 0, QTableWidgetItem(str('데이터가 없습니다.')))
+
     def fill_datas_position(self,datas:dict={}):
         try:
             if len(datas) == 0:
