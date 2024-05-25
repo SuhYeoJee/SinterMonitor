@@ -141,6 +141,12 @@ class Model():
             raw_hex = int(hex(raw), 16)
             result = result+ chr(raw_hex & 0xFF) + chr((raw_hex >> 8) & 0xFF) 
         return result
+    
+    def get_str_by_decimal(self,str_raw_data:list)->str:
+        for raw in str_raw_data:
+            raw_hex = int(hex(raw), 16)
+            result = result+ chr(raw_hex & 0xFF) + chr((raw_hex >> 8) & 0xFF) 
+        return result
 
 # ===========================================================================================
 if __name__ == "__main__":

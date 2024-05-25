@@ -23,7 +23,7 @@ class View(QMainWindow):
         # --------------------------
         screen = QDesktopWidget().screenGeometry() # 화면 크기 조정
         self.resize(int(screen.width() * 0.7), int(screen.width() * 0.7 * 0.7))
-        self.setWindowTitle("window_title")
+        self.setWindowTitle("Sinter Monitor")
         self.create_menu()
         # --------------------------
         self.layouts['main'] = self.get_main_layout()
@@ -78,11 +78,11 @@ class View(QMainWindow):
         top_layout.addStretch(1)
         top_layout.addLayout(self.wb.get_label_and_line_edit_layout("총 작업시간",self.widgets,"work_time"))
         top_layout.addWidget(self.wb.get_vline_widget())
-        self.widgets['now_date'] = self.wb.get_line_edit_widget(300)
-        top_layout.addWidget(self.widgets['now_date'],2)
+        self.widgets['date'] = self.wb.get_line_edit_widget(300)
+        top_layout.addWidget(self.widgets['date'],2)
 
-        self.widgets['b1'] = self.wb.get_button("b1")
-        self.widgets['b2'] = self.wb.get_button("b2")
+        self.widgets['b1'] = self.wb.get_button("full")
+        self.widgets['b2'] = self.wb.get_button("5mis")
         self.widgets['b3'] = self.wb.get_button("b3")
         top_layout.addWidget(self.widgets['b1'])
         top_layout.addWidget(self.widgets['b2'])
@@ -417,8 +417,22 @@ class View(QMainWindow):
 
     # ===========================================================================================
     def set_value_by_label_and_text(self,table_name,datas:dict):
+
+        #line_edit
+        if 'common' in table_name:
+            self.widgets['work_time'].setText(str(datas.get('work_time','')))
+            return
+        if 'graph' in table_name:
+            self.widgets['date'].setText(str(datas.get('date','')))
+        elif 'program' in table_name:
+            self.widgets['prg_no'].setText(str(datas.get('prg_no','')))
+            self.widgets['use_step'].setText(str(datas.get('use_step','')))
+            self.widgets['prg_name'].setText(str(datas.get('prg_name','')))
+
+        # table
         pos_and_text = {v:str(datas[k])+self.widgets[table_name].unit_data.get(k,'') for k,v in self.table_spec[table_name.replace('_table','_pos')].items() if k in datas.keys()}
         self.widgets[table_name].fill_datas_position(pos_and_text)
+
 
     def set_graph(self,graph_raw_data:dict):
         self.widgets['graph'].clear()
@@ -449,12 +463,13 @@ class View(QMainWindow):
 
     def set_xrange(self,xrange_size=None):
         if xrange_size:
-            self.xrange_size = xrange_size
-        else:
-            self.xrange_size = self.graph_size     
+            try:
+                self.xrange_size = int(xrange_size)
+            except:
+                self.xrange_size = self.graph_size     
         x_range1 = self.graph_size  - self.xrange_size
         x_range1 = x_range1 if x_range1 > 0 else 0
-        x_range2 = self.graph_size  + 2 if x_range1 else self.xrange_size + 2
+        x_range2 = self.graph_size  + 2 if x_range1 > 0 else self.xrange_size + 2
         self.widgets['graph'].setXRange(x_range1,x_range2, padding=0) 
 
     def set_xlabel(self):

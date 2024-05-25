@@ -20,7 +20,6 @@ class SinterData:
             "mould_update":"",
             "message":"",
             "work_time":"",
-            "now_date":""
         }],
         "graph":[{
             "prg_no":"",
@@ -34,7 +33,8 @@ class SinterData:
             "time":"",
             "real_time":"",
             "total_time":"",
-            "elec_distance":""
+            "elec_distance":"",
+            "date":''
         }],
         "program":[{
             "prg_no":"",
@@ -151,7 +151,6 @@ class SinterData:
             
         new_value = {k:v for k,v in self.data[sheet_name][-1].items()}
         new_value.update(data)
-        new_value.update({'date':datetime.now().strftime("%Y.%m.%d %H:%M:%S")})
         update_target.append(new_value)
     # --------------------------
     def save_data_to_excel(self):

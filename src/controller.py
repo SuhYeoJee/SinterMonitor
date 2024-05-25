@@ -13,7 +13,7 @@ import pyqtgraph as pg
 class Worker(QThread):
     data_generated = pyqtSignal()
 
-    def __init__(self,time:int=5000): #temp -> 5000
+    def __init__(self,time:int=500): #temp -> 5000
         super().__init__()
         self.running = True
         self.time = time
@@ -46,7 +46,7 @@ class Controller(QObject):
         self.view.menus['connect_action'].triggered.connect(self.connect_plc)
         self.view.menus['disconnect_action'].triggered.connect(self.disconnect_plc)
         self.view.widgets['graph'].scene().sigMouseClicked.connect(self.mouse_clicked)
-        self.view.widgets['b1'].clicked.connect(lambda:self.view.set_xrange()) # 1당5초, 전체뷰
+        self.view.widgets['b1'].clicked.connect(lambda:self.view.set_xrange('all')) # 1당5초, 전체뷰
         self.view.widgets['b2'].clicked.connect(lambda:self.view.set_xrange(60))  # 5분뷰? 10분에 120
 
     def mouse_clicked(self, event):
@@ -63,17 +63,20 @@ class Controller(QObject):
 
         def get_table_data_by_index(idx,dataset_name)->dict:
             table_data = {k:'' for k in self.model.data_spec["plc_reg_addr"][dataset_name].keys()}
+            if 'graph' in dataset_name:
+                table_data['date'] = ''
             if idx < 0: 
                 return table_data        
             try:
                 x = self.sint_data.data[dataset_name][idx]
-                for k in self.model.data_spec["plc_reg_addr"][dataset_name]:
+                for k in x.keys():
                     table_data[k] = x[k]
             except IndexError: ...
             except AttributeError: ...
             finally:
                 return table_data
-        
+        clicked_pos_datas = get_table_data_by_index(x_val,'common')
+        self.view.set_value_by_label_and_text("common",clicked_pos_datas)
         clicked_pos_datas = get_table_data_by_index(x_val,'graph')
         self.view.set_value_by_label_and_text("graph_table",clicked_pos_datas)
         clicked_pos_datas = get_table_data_by_index(x_val,'mould_top')
@@ -158,7 +161,14 @@ class Controller(QObject):
             self.stop_monitoring()        
         
     def _get_plc_data_and_update_sint_data(self,dataset_name:str)->dict:
-        data = self.model.get_plc_data_by_dataset_name(dataset_name)     
+        data = self.model.get_plc_data_by_dataset_name(dataset_name)
+        if 'program' in dataset_name and data.get('prg_name',None):
+            prg_name_start_addr = self.model.data_spec['plc_reg_addr']['program']['prg_name']
+            data['prg_name']  = self.model.get_plc_str_data_by_start_addr(prg_name_start_addr).strip().replace(' ','')
+        if 'graph' in dataset_name:
+            from datetime import datetime
+            data['date'] = datetime.now().strftime("%Y.%m.%d %H:%M:%S")
+
         self.sint_data.update_data(dataset_name,data)
         return data
 
@@ -176,7 +186,7 @@ class Controller(QObject):
             current_datetime = QDateTime.currentDateTime()
             display_text = current_datetime.toString('yyyy-MM-dd hh:mm:ss')
             if self.is_monitoring:
-                self.view.widgets['now_date'].setText(display_text)        
+                self.view.widgets['date'].setText(display_text)        
         timer = QTimer(self)
         timer.timeout.connect(show_now)
         timer.start(1000)         
@@ -200,10 +210,10 @@ class Controller(QObject):
     def set_view(self):
         if not self.sint_data:return
         def set_value_if_exist(dataset_name):
-            try:
-                self.view.set_value_by_label_and_text(f"{dataset_name}_table",self.sint_data.data[dataset_name][-1])
-            except:
-                ...
+            # try:
+            self.view.set_value_by_label_and_text(f"{dataset_name}_table",self.sint_data.data[dataset_name][-1])
+            # except:...
+        set_value_if_exist('common')
         set_value_if_exist('graph')
         set_value_if_exist('program')
         if len(self.sint_data.data['mould_top']):
@@ -230,6 +240,7 @@ class Controller(QObject):
         if self.sint_data and self.sint_data.is_new:
             self.stop_monitoring()
         file_name = self.view.open_file_dialog()
+        self.view.setWindowTitle(f"load data - {file_name}")
         self.sint_data = SinterData(file_name)
         self.set_view()
 
