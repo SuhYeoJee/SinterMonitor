@@ -82,7 +82,7 @@ class View(QMainWindow):
         top_layout.addWidget(self.widgets['date'],2)
 
         self.widgets['b1'] = self.wb.get_button("full")
-        self.widgets['b2'] = self.wb.get_button("5mis")
+        self.widgets['b2'] = self.wb.get_button("5mins")
         self.widgets['b3'] = self.wb.get_button("b3")
         top_layout.addWidget(self.widgets['b1'])
         top_layout.addWidget(self.widgets['b2'])
@@ -409,26 +409,15 @@ class View(QMainWindow):
     # -------------------------------------------------------------------------------------------
     def get_alarm_view_layout(self)->QHBoxLayout:
         alarm_view_layout = QHBoxLayout()
-        self.table_spec['alarm_form'] ={'init_size' : (21,9), 'slim_rows' : [],'slim_cols' : [],
-                    'text_items' : {
-                        (0,0):[(1,1),"seq", ['center']], (0,1):[(1,3),"time", ['center']], (0,4):[(1,5),"info", ['center']],
-                    }}
-        self.table_spec['alarm_form']['text_items'].update({(idx,0):[(1,1),"",['center']] for idx in range(1,21)})
-        self.table_spec['alarm_form']['text_items'].update({(idx,1):[(1,3),"",['center']] for idx in range(1,21)})
-        self.table_spec['alarm_form']['text_items'].update({(idx,4):[(1,5),"",['center']] for idx in range(1,21)})
-        self.table_spec['alarm_pos']={}
-        self.table_spec['alarm_pos'].update({f'seq{idx}':(idx,0) for idx in range(1,21)})
-        self.table_spec['alarm_pos'].update({f'time{idx}':(idx,1) for idx in range(1,21)})
-        self.table_spec['alarm_pos'].update({f'info{idx}':(idx,4) for idx in range(1,21)})
         # --------------------------
-        alarm_table = TablePlusWidget(form_data=self.table_spec['alarm_form'],pos_data=self.table_spec['alarm_pos'])
+        alarm_table = TablePlusWidget()
         self.widgets['alarm_table'] = alarm_table
         alarm_view_layout.addWidget(alarm_table)
         return alarm_view_layout
 
     def get_config_view_layout(self)->QHBoxLayout:
         config_view_layout = QHBoxLayout()
-        self.table_spec['config_form'] ={'init_size' : (4,4), 'slim_rows' : [],'slim_cols' : [],
+        self.table_spec['config_form'] ={'init_size' : (3,4), 'slim_rows' : [],'slim_cols' : [],
                     'text_items' : {
                         (0,0):[(1,1),"mode", ['center']],
                         (1,0):[(1,1),"ip change", ['center']],

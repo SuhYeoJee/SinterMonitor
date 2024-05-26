@@ -41,7 +41,7 @@ class Model():
         return None, None
 
     def _change_ip(self)->bool:
-        return True# no root
+        return True# no root #temp #debug
         adapter_name, ip_addr = self.find_adapter_name_and_ip()
         import subprocess
         try:
@@ -89,10 +89,10 @@ class Model():
         else:
             return False
 
-    def get_alaram_strs(self,alaram_bits:dict):
-        alaram_bits = {"M300":0,"M301":1}
-        return [self.data_spec['alarm'].get(k,'') for k,v in alaram_bits.items() if v]
-
+    def get_alarms(self):
+        alarm_bits = self._get_plc_bit_by_addr("M300",26) + self._get_plc_bit_by_addr("M536")
+        alarms = [x[0] for x in zip(self.data_spec['alarm'].keys(), alarm_bits) if x[1]]
+        return alarms
 
     # [PLC 데이터 접근] -------------------------------------------------------------------------------------------
     @_ensure_connected
@@ -104,12 +104,12 @@ class Model():
         return self.pymc3e.randomread(word_devices=words,dword_devices=[])
     # --------------------------
     @_ensure_connected
-    def _get_plc_bit_by_addr(self,addr:str)->list:
+    def _get_plc_bit_by_addr(self,addr:str,size:int=1)->list:
         if DEBUG:
             from random import choice
-            result = choice([0,1,1,1,1,1,1,1])
-            return [result]
-        return self.pymc3e.batchread_bitunits(addr,1)
+            result = [choice([0,1,1,1,1,1]) for x in range(size)]
+            return result
+        return self.pymc3e.batchread_bitunits(addr,size)
     # --------------------------
     def get_plc_data_by_dataset_name(self,dataset_name:str)->dict:
         dataset:dict = self.data_spec["plc_reg_addr"].get(dataset_name,{})
@@ -163,3 +163,4 @@ if __name__ == "__main__":
     # print(m.get_plc_bool_by_addr_name('stop'))
     # print(m.get_plc_bool_by_addr_name('mould_update'))
     # print(m.get_plc_data_by_addr_names("mould",["complete_l1"]))
+    print(m.get_alarms())

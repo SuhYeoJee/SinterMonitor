@@ -2,6 +2,7 @@ if __debug__:
     import sys
     sys.path.append(r"D:\Github\SinterMonitor")
 # -------------------------------------------------------------------------------------------
+from datetime import datetime
 from src.model import Model
 from src.view import View    
 from src.sinterdata import SinterData
@@ -32,31 +33,41 @@ class Controller(QObject):
         super().__init__()
         self.model:Model = Model()
         self.view:View = View()
-        self.sint_data:SinterData = None
+        self.sint_data:SinterData = SinterData()
         self.timer = Worker()
         self.worker = Worker()
         self.observer = Worker()
         self.alarmer = Worker()
         self.line = None
         self.is_monitoring:bool = False
-        self.alarms = {}
+        self.recent_alarms = []
         self.connect_view_func()
         # self.check_connect_and_start_waiting()
 
-    # def update_alarm_table(self, value):
-    #     self.data.append(value)  # 새로운 값을 데이터 리스트에 추가
-    #     if len(self.data) > 10:
-    #         self.data.pop(0)  # 리스트의 길이가 10을 초과하면 가장 오래된 값을 제거
-    #     for i, val in enumerate(self.data):
-    #         alarm_table = self.view.widgets['alarm_table']
-    #         alarm_table.fill_datas_position({(i,1):'asdf'})
-
-    def show_alarms(self): #알람이 하나이상 있을떄 호출
-        # 세부 알람 읽기
+    def update_and_show_alarms(self):
         # 세부 알람 코드 가져오기
+        now_alarms = self.model.get_alarms()
         # alarms에 시간과 매핑
-        # alarms값 뷰 - 테이블에 전달
-        ...
+        self.recent_alarms
+        # alarms 의 변동 확인
+        new_alarms = list(set(now_alarms) - set(self.recent_alarms))
+        deleted_alarms = list(set(self.recent_alarms) - set(now_alarms))        
+        # --------------------------
+        for x in new_alarms:
+            alarm_str = self.model.data_spec["alarm"].get(x,'unknown alarm')
+            date_str = datetime.now().strftime("%H:%M:%S")
+            alarm_info = {"date":date_str,"state":"on","info":alarm_str}
+            self.sint_data.data['alarm'].append(alarm_info)
+        for x in deleted_alarms:
+            alarm_str = self.model.data_spec["alarm"].get(x,'unknown alarm')
+            date_str = datetime.now().strftime("%H:%M:%S")
+            alarm_info = {"date":date_str,"state":"off","info":alarm_str}
+            self.sint_data.data['alarm'].append(alarm_info)
+        # --------------------------
+        self.view.widgets['alarm_table'].init_and_fill_data_sequence(self.sint_data.data['alarm'][1::-1],False)
+        # table_show
+        # --------------------------
+        self.recent_alarms = new_alarms #최신 알람상황 갱신
 
     def connect_view_func(self):
         self.view.menus['load_action'].triggered.connect(self.load_data)
@@ -175,17 +186,22 @@ class Controller(QObject):
         self.model.disconnect_pymc() #연결 해제
         if not self.model.is_connected():
             self.view.show_disconnect_success_box()
+            self.set_config_values(True,'view','')
     
     # [monitoring] ===========================================================================================
     @pyqtSlot()
-    def update_and_save(self)->None: #every 1 sec
+    def update_and_save(self)->None: #every 5 sec
         print('&update_and_save')
-        self.set_config_values(False,'monitoring','monitoring')
+        # self.set_config_values(False,'monitoring','monitoring')
         self.view.setWindowTitle("monitoring")
         def is_mould_changed()->bool:
             module_signal = self.model.get_plc_bool_by_addr_name("mould_update")
             print('module',module_signal)
             return module_signal
+        def is_alarm_exist()->bool:
+            alarm_signal = self.model.get_plc_bool_by_addr_name("total_alarm")
+            print('alarm',alarm_signal)
+            return alarm_signal
 
         common_data = self._get_plc_data_and_update_sint_data("common")
         graph_data = self._get_plc_data_and_update_sint_data("graph")
@@ -196,6 +212,9 @@ class Controller(QObject):
         else:
             self.sint_data.update_data("mould_top",self.sint_data.data['mould_top'][-1])
             self.sint_data.update_data("mould_bottom",self.sint_data.data['mould_bottom'][-1])
+        if is_alarm_exist():
+            self.update_and_show_alarms()
+
         self.sint_data.save_data_to_excel()
         self.set_view()
         if not self.is_running():
@@ -207,9 +226,8 @@ class Controller(QObject):
         if 'program' in dataset_name and data.get('prg_name',None):
             prg_name_start_addr = self.model.data_spec['plc_reg_addr']['program']['prg_name']
             data['prg_name']  = self.model.get_plc_str_data_by_start_addr(prg_name_start_addr).strip().replace(' ','')
-        if 'graph' in dataset_name:
-            from datetime import datetime
-            data['date'] = datetime.now().strftime("%Y.%m.%d %H:%M:%S")
+        # if 'graph' in dataset_name:
+        data['date'] = datetime.now().strftime("%Y.%m.%d %H:%M:%S")
 
         self.sint_data.update_data(dataset_name,data)
         return data
@@ -247,7 +265,7 @@ class Controller(QObject):
     @pyqtSlot()
     def stop_monitoring(self)->None:
         print('&stop_monitoring')
-        self.set_config_values(False,'monitoring','stop_monitoring')
+        # self.set_config_values(False,'monitoring','stop_monitoring')
         self.view.setWindowTitle("stop monitoring")
         if self.is_monitoring:
             self.timer.stop()  # timer 스레드 종료
@@ -274,6 +292,8 @@ class Controller(QObject):
             set_value_if_exist('mould_top')
         if len(self.sint_data.data['mould_bottom']):
             set_value_if_exist('mould_bottom')
+        
+        self.view.widgets['alarm_table'].init_and_fill_data_sequence(self.sint_data.data['alarm'],False) # show alarms
         self._set_graph()
 
     def _set_graph(self):

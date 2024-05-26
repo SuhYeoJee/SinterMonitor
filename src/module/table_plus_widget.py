@@ -51,7 +51,9 @@ class TablePlusWidget(QTableWidget):
                         self.setItem(0, col_idx, QTableWidgetItem(str(key))) #표머리
                     self.setItem(row_idx, col_idx, QTableWidgetItem(str(val))) #값
         finally:
-            self.resizeColumnsToContents()
+            # self.resizeColumnsToContents()
+            self.verticalHeader().setSectionResizeMode(QHeaderView.Fixed)
+            self.verticalHeader().setDefaultSectionSize(30)
 
     def fill_datas_position_label(self,datas:dict={}):
         try:
