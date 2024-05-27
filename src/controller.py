@@ -42,6 +42,7 @@ class Controller(QObject):
         self.is_monitoring:bool = False
         self.recent_alarms = []
         self.connect_view_func()
+        self.set_config_values(True,'viewer','')
         # self.check_connect_and_start_waiting()
 
     def update_and_show_alarms(self):
@@ -77,6 +78,7 @@ class Controller(QObject):
         self.view.widgets['graph'].scene().sigMouseClicked.connect(self.mouse_clicked)
         self.view.widgets['b1'].clicked.connect(lambda:self.view.set_xrange('all')) # 1당5초, 전체뷰
         self.view.widgets['b2'].clicked.connect(lambda:self.view.set_xrange(60))  # 5분뷰? 10분에 120
+        self.view.widgets['b3'].clicked.connect(lambda:self.view.set_xrange(120))  # 10분뷰? 10분에 120
 
     def set_config_values(self,connect=False, mode='',state=''):
         # self.set_config_values('mode','state')
@@ -85,12 +87,12 @@ class Controller(QObject):
             adapter_name = str(adapter_name) if adapter_name else 'adapter not found'
             ip_addr = str(ip_addr) if ip_addr else ''
             connection = 'Connect' if self.model.is_connected() else 'Disconnect'
-            self.view.widgets['config_table'].fill_datas_position_label({'ip_change':f'[{adapter_name}] {ip_addr}','connection': connection})
+            self.view.widgets['config_table'].fill_datas_position_label({'ip_change':f'{adapter_name}\n{ip_addr}','connection': connection})
         self.view.widgets['config_table'].fill_datas_position_label({'mode': mode,'state': state})
 
     def mouse_clicked(self, event):
         pos = event.pos()
-        pos.setX(pos.x() + 100)
+        pos.setX(pos.x() + 130)
         view = self.view.widgets['graph'].plotItem.vb
         pos_data = view.mapSceneToView(pos)
         x_val = int(round(pos_data.x()))
@@ -293,13 +295,15 @@ class Controller(QObject):
         if len(self.sint_data.data['mould_bottom']):
             set_value_if_exist('mould_bottom')
         
-        self.view.widgets['alarm_table'].init_and_fill_data_sequence(self.sint_data.data['alarm'],False) # show alarms
+        if self.sint_data.data.get('alarm'):
+            self.view.widgets['alarm_table'].init_and_fill_data_sequence(self.sint_data.data['alarm'],False) # show alarms
         self._set_graph()
 
     def _set_graph(self):
         print('&_set_graph')
         graph_data = {
-            'current':[],'real_current':[],
+            'current':[],
+            # 'real_current':[], # 실제 전류값 비표시
             'press':[],'real_press':[],
             'temp':[],'real_temp':[],
             'elec_distance':[], 'date':[]

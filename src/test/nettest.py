@@ -62,4 +62,7 @@ target_mac = '00-50-56-C0-00-08'
 target_ip = '192.168.0.142'
 
 # 주어진 MAC 주소와 일치하는 네트워크 인터페이스의 IP 주소를 확인하고, 일치하지 않으면 IP 주소를 변경합니다.
-check_and_set_ip(target_mac, target_ip)
+# check_and_set_ip(target_mac, target_ip)
+
+
+print(get_ip_by_mac(target_mac))

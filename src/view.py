@@ -22,7 +22,7 @@ class View(QMainWindow):
         self.graph_size:int = 0
         # --------------------------
         screen = QDesktopWidget().screenGeometry() # 화면 크기 조정
-        self.resize(int(screen.width() * 0.7), int(screen.width() * 0.7 * 0.85))
+        self.resize(int(screen.height() * 0.7 * 2.3), int(screen.height() * 0.7))
         self.setWindowTitle("Sinter Monitor")
         self.create_menu()
         # --------------------------
@@ -83,7 +83,7 @@ class View(QMainWindow):
 
         self.widgets['b1'] = self.wb.get_button("full")
         self.widgets['b2'] = self.wb.get_button("5mins")
-        self.widgets['b3'] = self.wb.get_button("b3")
+        self.widgets['b3'] = self.wb.get_button("10mins")
         top_layout.addWidget(self.widgets['b1'])
         top_layout.addWidget(self.widgets['b2'])
         top_layout.addWidget(self.widgets['b3'])
@@ -126,6 +126,7 @@ class View(QMainWindow):
             "time":'sec',
             "real_time":'sec',
             "total_time":'sec',
+            "elec_distance":'mm',
         }        
         # --------------------------
         self.widgets['graph'] = pg.PlotWidget()
@@ -394,8 +395,8 @@ class View(QMainWindow):
         # --------------------------
         side_view_layout = QVBoxLayout()
         side_view_layout.addWidget(self.wb.get_box_frame_widget(self.layouts['alarm_view_layout']),4)
-        side_view_layout.addWidget(self.wb.get_box_frame_widget(self.layouts['config_view_layout']),1)
-        side_view_layout.addStretch(2)
+        side_view_layout.addWidget(self.wb.get_box_frame_widget(self.layouts['config_view_layout']),2)
+        side_view_layout.addStretch(1)
         # --------------------------
         main_layout = QVBoxLayout()
         main_layout.addWidget(self.wb.get_box_frame_widget(self.layouts['top_layout']))

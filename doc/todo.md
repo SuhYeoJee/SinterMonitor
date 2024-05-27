@@ -1,22 +1,52 @@
 # 할 일 목록 (To-Do List)
 
-
 ## 프로그램 순서 재확인 *** 중요 ***
 
-
-***
-
-#### 관리자권한 패키징
-pyinstaller -w --uac-admin admin.py
-
-netsh interface ip set address name="이더넷 3" static 192.168.0.200 255.255.255.0 192.168.0.1
-
-오류 발생: Command 'netsh interface ip set address name="이더넷 3" static 192.168.0.200 255.255.255.0 192.168.0.1' returned non-zero exit status 1.
 
 - 연결 실패시 동작하면안됨 -> 근데 이거 모델돌린거라 그래도 다시 봐
 각종 오류처리 - 비연결상태에서 디스커넥트 연결에서 커넥트 등등
 
-***  
+디스커넥트 동작 이상 
+ - 연결 종료 후 재동작 하는 경우 확인됨
+어댑터 낫파운드- 근데 연결은 됨
+***
+
+
+
+
+
+
+
+
+
+##### 오류표 갱신 수정필 - 보류
+- 알람 시그널 꺼졌을떄 처리 없음
+- green, red 값 읽어오는게 제일 좋음
+
+***
+
+
+
+
+
+
+
+##### 연결 오류1 - 완료
+ConnectionResetError: [WinError 10054] 현재 연결은 원격 호스트에 의해 강제로 끊겼습니다
+-> 관리자 실행시 나타나지 않음
+
+
+#### 관리자권한 패키징 - 완료
+pyinstaller --onefile --uac-admin main.py
+pyinstaller -w --uac-admin main.py
+
+#### 디버그세팅 - 완료
+루트주소변경
+모델 디버그False
+ip 수동교체
+```
+netsh interface ip set address name="이더넷 3" static 192.168.0.200 255.255.255.0 192.168.0.1
+```
 #### 오류표 - 완료
 #### 프로그램 상태 레이아웃 - 완료
 #### 라인에딧 텍스트 입력 - 완료

@@ -9,8 +9,8 @@ import socket
 import pymcprotocol
 # ===========================================================================================
 
-DEBUG = True # pymc3e return randint(1,6000)
-# DEBUG = False
+# DEBUG = True # pymc3e return randint(1,6000)
+DEBUG = False
 
 
 class Model():
@@ -34,20 +34,26 @@ class Model():
         return data     
     # [이더넷 IP 변경] ===========================================================================================
     def find_adapter_name_and_ip(self):
-        for name, addresses in psutil.net_if_addrs().items():
-            for address in addresses:
-                if address.address.lower() == self.config.get("plc_mac_address","").lower():
-                    return name, address
-        return None, None
+        for interface, addrs in psutil.net_if_addrs().items():
+            for addr in addrs:
+                if addr.family == psutil.AF_LINK:
+                    if addr.address.lower() == self.config.get("plc_mac_address","").lower():
+                        for addr in addrs:
+                            if addr.family == socket.AF_INET:
+                                return interface, addr.address
+            return None, None
 
     def _change_ip(self)->bool:
-        return True# no root #temp #debug
+        # return True# no root #temp #debug
         adapter_name, ip_addr = self.find_adapter_name_and_ip()
         import subprocess
+        import time
         try:
             cmd = f'''netsh interface ip set address name="{adapter_name}" static {self.config.get('pc_ip_address',"192.168.0.200")} {self.config.get('subnet_mask',"255.255.255.0")} {self.config.get('ip_gateway',"192.168.0.1")}'''
             print(cmd)
             subprocess.run(cmd, shell=True, check=True)
+            time.sleep(3)
+            print('netsh ok')
             return True
         except subprocess.CalledProcessError as e:
             print(f"오류 발생: {e}")
@@ -58,20 +64,27 @@ class Model():
             if not self.is_connected():
                 self.pymc3e = self._connect_pymc()
             if self.is_connected():
-                return func(self, *args, **kwargs)
+                # return func(self, *args, **kwargs)
+                try: #temp
+                    return func(self, *args, **kwargs)
+                except:
+                    self.pymc3e = self._connect_pymc()
+                    return func(self, *args, **kwargs)
             else:
                 return False #연결실패시 False 반환
         return wrapper
 
     def _connect_pymc(self)->pymcprotocol.Type3E:
         pymc3e = pymcprotocol.Type3E()
+        self.pymc3e = pymc3e
         if DEBUG:return pymc3e
         try:
             self._change_ip()
             pymc3e.connect(self.config.get('plc_ip_address',"192.168.0.142"),int(self.config.get('plc_mcprotocol_port',1400)))
             print("pymc3e.connect.ok")
-        except: #연결실패
+        except Exception as e: #연결실패
             print("pymc3e.connect.fail")
+            print(e)
         return pymc3e
     
     def disconnect_pymc(self)->None:
@@ -81,9 +94,7 @@ class Model():
             except AttributeError:# AttributeError: 'Type3E' object has no attribute '_sock'
                 ... #temp #when debug
 
-    def is_connected(self,result:bool=None)->bool:
-        if result is not None: #temp #debug
-            return result
+    def is_connected(self)->bool:
         if DEBUG or (self.pymc3e and self.pymc3e._is_connected):
             return True
         else:
