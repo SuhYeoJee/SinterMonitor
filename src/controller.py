@@ -38,7 +38,6 @@ class Controller(QObject):
         self.timer = Worker()
         self.worker = Worker()
         self.observer = Worker()
-        self.alarmer = Worker()
         self.line = None
         self.is_monitoring:bool = False
         self.recent_alarms = []

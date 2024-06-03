@@ -41,7 +41,7 @@ class Model():
                         for addr in addrs:
                             if addr.family == socket.AF_INET:
                                 return interface, addr.address
-            return None, None
+        return None, None
 
     def _change_ip(self)->bool:
         # return True# no root #temp #debug
@@ -143,7 +143,6 @@ class Model():
         if not addr : return None
         flag =  self._get_plc_bit_by_addr(addr)[0]
         return True if flag else False
-
 
     # -------------------------------------------------------------------------------------------
     def get_plc_str_data_by_start_addr(self,start_addr,size:int=9)->str:

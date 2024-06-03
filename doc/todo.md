@@ -8,7 +8,7 @@
 
 디스커넥트 동작 이상 
  - 연결 종료 후 재동작 하는 경우 확인됨
-어댑터 낫파운드- 근데 연결은 됨
+
 
 ***
 
@@ -22,6 +22,8 @@
 ConnectionResetError: [WinError 10054] 현재 연결은 원격 호스트에 의해 강제로 끊겼습니다
 -> 관리자 실행시 나타나지 않음
 
+##### 연결 오류2 - 완료
+어댑터 낫파운드- 근데 연결은 됨 -> `find_adapter_name_and_ip` 수정
 
 #### 관리자권한 패키징 - 완료
 pyinstaller --onefile --uac-admin main.py
