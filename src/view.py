@@ -47,9 +47,15 @@ class View(QMainWindow):
         self.menus["load_action"] = load_action
         close_action = QAction('Close', self)
         self.menus["close_action"] = close_action
+        capture_action = QAction('Capture', self)
+        self.menus["capture_action"] = capture_action        
+        print_action = QAction('Print', self)
+        self.menus["print_action"] = print_action
         # --------------------------
         file_menu = menubar.addMenu('File')
         file_menu.addAction(load_action)
+        file_menu.addAction(capture_action)
+        file_menu.addAction(print_action)
         file_menu.addAction(close_action)
         # -------------------------------------------------------------------------------------------
         connect_action = QAction('Connect', self)
@@ -76,7 +82,7 @@ class View(QMainWindow):
         self.widgets['message'] = self.wb.get_label("")
         top_layout.addWidget(self.widgets['message'],4)
         top_layout.addStretch(1)
-        top_layout.addLayout(self.wb.get_label_and_line_edit_layout("총 작업시간",self.widgets,"work_time"))
+        top_layout.addLayout(self.wb.get_label_and_line_edit_layout("Work Time",self.widgets,"work_time"))
         top_layout.addWidget(self.wb.get_vline_widget())
         self.widgets['date'] = self.wb.get_line_edit_widget(300)
         top_layout.addWidget(self.widgets['date'],2)
@@ -133,20 +139,22 @@ class View(QMainWindow):
         self.widgets['graph'].showGrid(x=True, y=True)
         self.widgets['graph'].setBackground('w')
         self.widgets['graph'].getViewBox().setMouseEnabled(x=True, y=False)
-        self.widgets['graph'].setYRange(0,6000, padding=0.03)
+        self.widgets['graph'].setYRange(-2000,60000, padding=0.03)
         self.widgets['graph'].getPlotItem().showAxis('right')
         # --------------------------
         right_axis = self.widgets['graph'].getPlotItem().getAxis('right')
-        right_ticks = [(0, '0, 0'), (600, '50, 20'), (1200, '100, 40'), (1800, '150, 60'), (2400, '200, 80'), (3000, '250, 100'), \
-                       (3600, '300, 120'), (4200, '350, 140'), (4800, '400, 160'), (5400, '450, 180'), (6000, '500, 200')]
+        right_ticks = [(-2000, '  %,  mm'), (0, '  0,   60'), (6000, ' 12,  66'), (12000, ' 24,  72'), (18000, ' 36,  78'), (24000, ' 48,  84'), (30000, ' 60,  90'), \
+                       (36000, ' 72,  96'), (42000, ' 84, 102'), (48000, ' 96, 108'), (54000, '108, 114'), (60000, '120, 120')]
         right_axis.setTicks([right_ticks])
         right_axis.setWidth(130)
+        right_axis.setTextPen(pg.mkPen('k'))
         # --------------------------
         left_axis = self.widgets['graph'].getPlotItem().getAxis('left')
-        left_ticks = [(0, '0, 300'), (600, '600, 400'), (1200, '1200, 500'), (1800, '1800, 600'), (2400, '2400, 700'), (3000, '3000, 800'), \
-                      (3600, '3600, 900'), (4200, '4200, 1000'), (4800, '4800, 1100'), (5400, '5400, 1200'), (6000, '6000, 1300')]
+        left_ticks = [(-2000, 'Kg/cm²,   °C'), (0, '0,  300'), (6000, '6000,  400'), (12000, '12000,  500'), (18000, '18000,  600'), (24000, '24000,  700'), (30000, '30000,  800'), \
+                      (36000, '36000,  900'), (42000, '42000, 1000'), (48000, '48000, 1100'), (54000, '54000, 1200'), (60000, '60000, 1300')]
         left_axis.setTicks([left_ticks])
         left_axis.setWidth(130)
+        left_axis.setTextPen(pg.mkPen('k'))
         # --------------------------
         legend = self.widgets['graph'].addLegend(offset=(0,1)) # 범례
         # --------------------------
@@ -232,7 +240,7 @@ class View(QMainWindow):
                         (10,4):[(1,1),"", ['center']],
                         (10,5):[(1,1),"MinCurrent%", ['center']],          
                         (11,0):[(1,1),"11", ['center']],
-                        (11,1):[(1,1),"", ['center']],
+                        (11,1):[(1,1),"Holding", ['center']],
                         (11,2):[(1,1),"", ['center']],
                         (11,3):[(1,1),"", ['center']],
                         (11,4):[(1,1),"", ['center']],
@@ -287,7 +295,23 @@ class View(QMainWindow):
             "sint_dim":(9,5),
             "min_current":(11,5),
         }        
-        program_table = TablePlusWidget(form_data=self.table_spec['program_form'],pos_data=self.table_spec['program_pos'])
+        
+        self.table_spec['program_unit']={
+            "step1_press":'00',
+            "step2_press":'00',
+            "step3_press":'00',
+            "step4_press":'00',
+            "step5_press":'00',
+            "step6_press":'00',
+            "step7_press":'00',
+            "step8_press":'00',
+            "step9_press":'00',
+            "step10_press":'00',
+            "step11_press":'00',
+            "step12_press":'00',
+
+        }            
+        program_table = TablePlusWidget(form_data=self.table_spec['program_form'],pos_data=self.table_spec['program_pos'],unit_data=self.table_spec['program_unit'])
         self.widgets['program_table'] = program_table
         program_view_layout = QVBoxLayout()
         program_view_layout.addLayout(program_top_layout)
@@ -477,22 +501,25 @@ class View(QMainWindow):
         # -------------------------------------------------------------------------------------------
         for line_name, line_data in graph_raw_data.items():
             if line_name == "current":
-                color, data_min, data_max = (150, 200, 150),0,500
+                color, data_min, data_max = (0, 255, 0),0,120
+                # color, data_min, data_max = (150, 200, 150),0,120
             elif line_name == "real_current":
-                color, data_min, data_max = (0, 255, 0),0,500
+                color, data_min, data_max = (0, 255, 0),0,120
             elif line_name == "press":
-                color, data_min, data_max = (150, 150, 200),0,6000
+                color, data_min, data_max = (150, 150, 200),0,60000
+                line_data = [x*100 for x in line_data]
             elif line_name == "real_press":
-                color, data_min, data_max = (0, 0, 255),0,6000
+                color, data_min, data_max = (0, 0, 255),0,60000
+                line_data = [x*100 for x in line_data]
             elif line_name == "temp":
                 color, data_min, data_max = (200, 150, 150),300,1300
             elif line_name == "real_temp":
                 color, data_min, data_max = (255, 0, 0),300,1300
             elif line_name == "elec_distance":
-                color, data_min, data_max = 'orange',0,200
+                color, data_min, data_max = 'orange',60,120
             else:
                 continue
-            scaled_data = np.interp(line_data, (data_min,data_max), (0, 6000))
+            scaled_data = np.interp(line_data, (data_min,data_max), (0, 60000))
             self.widgets['graph'].plot(scaled_data, pen=pg.mkPen(color=color, width=2), name=line_name)
         # --------------------------
         self.graph_size = len(graph_raw_data.get("press",[]))
@@ -513,12 +540,14 @@ class View(QMainWindow):
     def set_xlabel(self):
         bottom_axis = self.widgets['graph'].getPlotItem().getAxis('bottom')
         step = 6 #30초간격
-        bottom_axis.setTicks([[(idx,str(idx*5)) for idx in range(0,self.graph_size,step)]])               
+        bottom_axis.setTicks([[(idx,str(idx*5)) for idx in range(0,self.graph_size,step)]])       
+        bottom_axis.setTextPen(pg.mkPen('k'))
+
 
 # ===========================================================================================
 if __name__ == "__main__":
     app = QApplication([])
     v = View()
-    v.set_graph({"current":[50,100,150,200,250,],"elec_distance":[]})
+    v.set_graph({"current":[0,0,0,150,200,250,],"elec_distance":[]})
     v.show()
     app.exec_()

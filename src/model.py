@@ -9,7 +9,7 @@ import socket
 import pymcprotocol
 # ===========================================================================================
 
-# DEBUG = True # pymc3e return randint(1,6000)
+# DEBUG = True # pymc3e return randint(1,600)
 DEBUG = False
 
 
@@ -110,7 +110,7 @@ class Model():
     def _get_plc_data_by_addrs(self,words=[])->dict:
         if DEBUG:
             from random import randint
-            result = [randint(1,6000) for x in range(len(words))],[]
+            result = [randint(1,600) for x in range(len(words))],[]
             return result
         return self.pymc3e.randomread(word_devices=words,dword_devices=[])
     # --------------------------

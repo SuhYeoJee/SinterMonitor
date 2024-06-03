@@ -9,6 +9,7 @@ from src.sinterdata import SinterData
 from src.module.pyqt_imports import *
 from src.module.exceptions import *
 import pyqtgraph as pg
+from os import makedirs
 # ===========================================================================================
 
 class Worker(QThread):
@@ -72,6 +73,8 @@ class Controller(QObject):
 
     def connect_view_func(self):
         self.view.menus['load_action'].triggered.connect(self.load_data)
+        self.view.menus['capture_action'].triggered.connect(self.capture_data)
+        self.view.menus['print_action'].triggered.connect(self.print_data)
         self.view.menus['close_action'].triggered.connect(self.close_data)
         self.view.menus['connect_action'].triggered.connect(self.connect_plc)
         self.view.menus['disconnect_action'].triggered.connect(self.disconnect_plc)
@@ -315,6 +318,8 @@ class Controller(QObject):
 
         self.view.set_graph(graph_data)
 
+    # ===========================================================================================
+
     def load_data(self):
         print('&load_data')
         if self.sint_data and self.sint_data.is_new:
@@ -324,6 +329,25 @@ class Controller(QObject):
         self.set_config_values(False,'viewer',file_name)
         self.sint_data = SinterData(file_name)
         self.set_view()
+
+    def capture_data(self):
+        print('&capture_data')
+        screenshot = QApplication.primaryScreen().grabWindow(self.view.winId())
+        
+        file_name = self.sint_data.file_name.split("/")[-1].split(".")[0]
+        img_name = file_name + '.png'
+        img_path = './capture/' + img_name
+        # --------------------------
+        makedirs('./capture', exist_ok=True)
+        screenshot.save(img_path, 'png')
+        return img_name
+
+    def print_data(self):
+        print('&print_data')
+        img_name = self.capture_data()
+
+        import subprocess
+        subprocess.run(["start", "mspaint", "/p",img_name], shell=True, cwd='./capture')
 
     def close_data(self):
         print('&close_data')
