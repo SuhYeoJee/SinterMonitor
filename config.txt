@@ -1,5 +1,4 @@
 [DEFAULT]
-text = pyqt5 template
 plc_mac_address = 00-E0-4C-36-08-EA
 plc_ip_address = 192.168.0.142
 pc_ip_address = 192.168.0.200

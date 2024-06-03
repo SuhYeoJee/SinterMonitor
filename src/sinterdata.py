@@ -149,8 +149,8 @@ class SinterData:
     def update_data(self,sheet_name:str,data:dict)->None:
         update_target = self.data.get(sheet_name,False)
         if not update_target:
-            self.data[sheet_name]=[]
-        if sheet_name == "graph":
+            self.data[sheet_name] = []
+        if sheet_name == "graph": # 비율조정
             e_d = data["elec_distance"]
             e_d = e_d / 100
             data["elec_distance"] = e_d

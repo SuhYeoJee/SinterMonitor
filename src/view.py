@@ -474,7 +474,7 @@ class View(QMainWindow):
         msg.exec_()
 
     def show_disconnect_success_box(self):
-        msg = self.wb.get_message_box('info','Success','disConnection successful')
+        msg = self.wb.get_message_box('info','Success','Disconnection successful')
         QTimer.singleShot(3000, msg.accept)
         msg.exec_()
 

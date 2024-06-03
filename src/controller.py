@@ -48,9 +48,6 @@ class Controller(QObject):
     def update_and_show_alarms(self):
         # 세부 알람 코드 가져오기
         now_alarms = self.model.get_alarms()
-        # alarms에 시간과 매핑
-        self.recent_alarms
-        # alarms 의 변동 확인
         new_alarms = list(set(now_alarms) - set(self.recent_alarms))
         deleted_alarms = list(set(self.recent_alarms) - set(now_alarms))        
         # --------------------------
@@ -66,8 +63,6 @@ class Controller(QObject):
             self.sint_data.data['alarm'].append(alarm_info)
         # --------------------------
         self.view.widgets['alarm_table'].init_and_fill_data_sequence(self.sint_data.data['alarm'][1::-1],False)
-        # table_show
-        # --------------------------
         self.recent_alarms = new_alarms #최신 알람상황 갱신
 
     def connect_view_func(self):
@@ -78,9 +73,9 @@ class Controller(QObject):
         self.view.menus['connect_action'].triggered.connect(self.connect_plc)
         self.view.menus['disconnect_action'].triggered.connect(self.disconnect_plc)
         self.view.widgets['graph'].scene().sigMouseClicked.connect(self.mouse_clicked)
-        self.view.widgets['b1'].clicked.connect(lambda:self.view.set_xrange('all')) # 1당5초, 전체뷰
-        self.view.widgets['b2'].clicked.connect(lambda:self.view.set_xrange(60))  # 5분뷰? 10분에 120
-        self.view.widgets['b3'].clicked.connect(lambda:self.view.set_xrange(120))  # 10분뷰? 10분에 120
+        self.view.widgets['b1'].clicked.connect(lambda:self.view.set_xrange('all'))
+        self.view.widgets['b2'].clicked.connect(lambda:self.view.set_xrange(60))
+        self.view.widgets['b3'].clicked.connect(lambda:self.view.set_xrange(120))
 
     def set_config_values(self,connect=False, mode='',state=''):
         # self.set_config_values('mode','state')
@@ -93,6 +88,7 @@ class Controller(QObject):
         self.view.widgets['config_table'].fill_datas_position_label({'mode': mode,'state': state})
 
     def mouse_clicked(self, event):
+        # 클릭위치 값 표시
         pos = event.pos()
         pos.setX(pos.x() + 130)
         view = self.view.widgets['graph'].plotItem.vb
@@ -129,6 +125,7 @@ class Controller(QObject):
 
     # [waiting] ===========================================================================================
     def check_connect_and_start_waiting(self):
+        # 연결 확인, 시작신호 대기 실행
         print('&check_connect_and_start_waiting')
         try:
             if self.model.is_connected():
@@ -140,6 +137,7 @@ class Controller(QObject):
 
     @pyqtSlot()
     def start_waiting_start_signal(self):
+        # 시작신호 대기 시작
         print('&start_waiting_start_signal')
         self.set_config_values(True,'monitoring','waiting start signal')
         self.view.setWindowTitle("waiting start signal")
@@ -149,6 +147,7 @@ class Controller(QObject):
             self.observer.start()
     
     def is_running(self)->bool:
+        # plc 동작여부 확인
         print('&is_running')
         # return True # debug
         start_signal = self.model.get_plc_bool_by_addr_name("start")
@@ -157,11 +156,12 @@ class Controller(QObject):
 
     @pyqtSlot()
     def check_start_signal(self)->None: #every 1 sec
+        # 시작신호 확인
+        if self.is_monitoring: # 모니터링중이면 시작신호 확인안함
+            return 
         print('&check_start_signal')
         self.set_config_values(False,'monitoring','stop waiting start signal')
         self.view.setWindowTitle("check start signal")
-        if self.is_monitoring: 
-            return
 
         if self.is_running():
           self.stop_waiting_start_signal()
@@ -170,6 +170,7 @@ class Controller(QObject):
 
     @pyqtSlot()
     def stop_waiting_start_signal(self):
+        # 시작신호 대기 종료
         print('&stop_waiting_start_signal')
         self.set_config_values(True,'monitoring','stop waiting start signal')
         self.view.setWindowTitle("stop waiting start signal")
@@ -177,6 +178,8 @@ class Controller(QObject):
         self.observer.wait()  # observer 스레드 종료
 
     def connect_plc(self):
+        if self.is_monitoring: # 모니터링중이면 연결 명령 무시
+            return         
         print('&connect_plc')
         self.view.clear_view()
         if not self.model.is_connected():
@@ -195,6 +198,8 @@ class Controller(QObject):
     # [monitoring] ===========================================================================================
     @pyqtSlot()
     def update_and_save(self)->None: #every 5 sec
+        if not self.is_monitoring: return
+        # plc 값 읽기, 저장
         print('&update_and_save')
         # self.set_config_values(False,'monitoring','monitoring')
         self.view.setWindowTitle("monitoring")
@@ -210,19 +215,19 @@ class Controller(QObject):
         common_data = self._get_plc_data_and_update_sint_data("common")
         graph_data = self._get_plc_data_and_update_sint_data("graph")
         program_data = self._get_plc_data_and_update_sint_data("program")
-        if is_mould_changed():
+        if is_mould_changed(): #몰드값 변동시 갱신
             mould_top_data = self._get_plc_data_and_update_sint_data("mould_top")
             mould_bottom_data = self._get_plc_data_and_update_sint_data("mould_bottom")
-        else:
+        else: #몰드값 유지시 직전값 재사용
             self.sint_data.update_data("mould_top",self.sint_data.data['mould_top'][-1])
             self.sint_data.update_data("mould_bottom",self.sint_data.data['mould_bottom'][-1])
-        if is_alarm_exist():
+        if is_alarm_exist(): #알람 있을때 갱신
             self.update_and_show_alarms()
 
-        self.sint_data.save_data_to_excel()
+        self.sint_data.save_data_to_excel() #파일저장
         self.set_view()
         if not self.is_running():
-            self.stop_monitoring()        
+            self.stop_monitoring() #모니터링 종료
         
     def _get_plc_data_and_update_sint_data(self,dataset_name:str)->dict:
         print('&_get_plc_data_and_update_sint_data')
@@ -268,6 +273,7 @@ class Controller(QObject):
 
     @pyqtSlot()
     def stop_monitoring(self)->None:
+        if not self.is_monitoring: return
         print('&stop_monitoring')
         # self.set_config_values(False,'monitoring','stop_monitoring')
         self.view.setWindowTitle("stop monitoring")
