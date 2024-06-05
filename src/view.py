@@ -295,7 +295,6 @@ class View(QMainWindow):
             "sint_dim":(9,5),
             "min_current":(11,5),
         }        
-        
         self.table_spec['program_unit']={
             "step1_press":'00',
             "step2_press":'00',
