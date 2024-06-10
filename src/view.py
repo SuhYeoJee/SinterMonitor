@@ -23,7 +23,7 @@ class View(QMainWindow):
         # --------------------------
         screen = QDesktopWidget().screenGeometry() # 화면 크기 조정
         self.resize(int(screen.height() * 0.7 * 2.3), int(screen.height() * 0.7))
-        self.setWindowTitle("Sinter Monitor")
+        self.setWindowTitle("Sintering Monitor System")
         self.create_menu()
         # --------------------------
         self.layouts['main'] = self.get_main_layout()
@@ -79,8 +79,14 @@ class View(QMainWindow):
     # -------------------------------------------------------------------------------------------
     def get_top_layout(self)->QHBoxLayout:
         top_layout = QHBoxLayout()
-        self.widgets['message'] = self.wb.get_label("")
-        top_layout.addWidget(self.widgets['message'],4)
+        self.widgets['message'] = self.wb.get_label("Sintering Monitor System")
+        self.widgets['message'].setStyleSheet("font-size: 24px;")
+
+        label = QLabel(self)
+        label.setPixmap(QPixmap('./DiT.jpg'))
+
+        top_layout.addWidget(label)
+        top_layout.addWidget(self.widgets['message'],2)
         top_layout.addStretch(1)
         top_layout.addLayout(self.wb.get_label_and_line_edit_layout("Work Time",self.widgets,"work_time"))
         top_layout.addWidget(self.wb.get_vline_widget())

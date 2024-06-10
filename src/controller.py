@@ -140,7 +140,7 @@ class Controller(QObject):
         # 시작신호 대기 시작
         print('&start_waiting_start_signal')
         self.set_config_values(True,'monitoring','waiting start signal')
-        self.view.setWindowTitle("waiting start signal")
+        self.view.setWindowTitle("[Sintering Monitor System] waiting start signal")
         if not self.observer.isRunning():
             self.observer = Worker(1000)  # observer가 주기적으로 check_start_signal 호출
             self.observer.data_generated.connect(self.check_start_signal)  
@@ -161,7 +161,7 @@ class Controller(QObject):
             return 
         print('&check_start_signal')
         self.set_config_values(False,'monitoring','stop waiting start signal')
-        self.view.setWindowTitle("check start signal")
+        self.view.setWindowTitle("[Sintering Monitor System] check start signal")
 
         if self.is_running():
           self.stop_waiting_start_signal()
@@ -173,7 +173,7 @@ class Controller(QObject):
         # 시작신호 대기 종료
         print('&stop_waiting_start_signal')
         self.set_config_values(True,'monitoring','stop waiting start signal')
-        self.view.setWindowTitle("stop waiting start signal")
+        self.view.setWindowTitle("[Sintering Monitor System] stop waiting start signal")
         self.observer.stop()  # observer 스레드 종료
         self.observer.wait()  # observer 스레드 종료
 
@@ -202,7 +202,7 @@ class Controller(QObject):
         # plc 값 읽기, 저장
         print('&update_and_save')
         # self.set_config_values(False,'monitoring','monitoring')
-        self.view.setWindowTitle("monitoring")
+        self.view.setWindowTitle("[Sintering Monitor System] monitoring")
         def is_mould_changed()->bool:
             module_signal = self.model.get_plc_bool_by_addr_name("mould_update")
             print('module',module_signal)
@@ -253,7 +253,7 @@ class Controller(QObject):
     def start_monitoring(self)->None:
         print('&start_monitoring')
         self.set_config_values(False,'monitoring','start_monitoring')
-        self.view.setWindowTitle("start monitoring")
+        self.view.setWindowTitle("[Sintering Monitor System] start monitoring")
         # self.view.widgets["graph_scene"].clear()
         # temp
         self.sint_data = SinterData()
@@ -276,7 +276,7 @@ class Controller(QObject):
         if not self.is_monitoring: return
         print('&stop_monitoring')
         # self.set_config_values(False,'monitoring','stop_monitoring')
-        self.view.setWindowTitle("stop monitoring")
+        self.view.setWindowTitle("[Sintering Monitor System] stop monitoring")
         if self.is_monitoring:
             self.timer.stop()  # timer 스레드 종료
             self.worker.stop()  # Worker 스레드 종료
@@ -330,7 +330,7 @@ class Controller(QObject):
         if self.sint_data and self.sint_data.is_new:
             self.stop_monitoring()
         file_name = self.view.open_file_dialog()
-        self.view.setWindowTitle(f"load data - {file_name}")
+        self.view.setWindowTitle(f"[Sintering Monitor System] load data - {file_name}")
         self.set_config_values(False,'viewer',file_name)
         self.sint_data = SinterData(file_name)
         self.set_view()
