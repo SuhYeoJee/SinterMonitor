@@ -148,6 +148,9 @@ class TablePlusWidget(QTableWidget):
         elif 'left' in item_option:
             item.setTextAlignment(Qt.AlignLeft | Qt.AlignVCenter)
         # --------------------------
+        if 'bg' in item_option:
+            item.setBackground(QColor(240, 240, 240))
+        # --------------------------
         if pos: 
             self.setItem(*pos,item)
         return item

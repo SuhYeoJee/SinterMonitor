@@ -104,13 +104,13 @@ class View(QMainWindow):
     # -------------------------------------------------------------------------------------------
     def get_graph_view_layout(self)->QVBoxLayout:
         self.table_spec['graph_form']={'init_size' : (3,7), 'slim_rows' : [],'slim_cols' : [],'text_items' : {
-                (0,0):[(1,1),"PRG.NO", ['center']],
-                (0,1):[(1,1),"STEP", ['center']],
-                (0,2):[(1,1),"Current (%)", ['center']],
-                (0,3):[(1,1),"Pressure (Kg/cm²)", ['center']],
-                (0,4):[(1,1),"Temperature (°C)", ['center']],
-                (0,5):[(1,1),"Time (sec)", ['center']],
-                (0,6):[(1,1),"Total Time", ['center']],
+                (0,0):[(1,1),"PRG.NO", ['center','bg']],
+                (0,1):[(1,1),"STEP", ['center','bg']],
+                (0,2):[(1,1),"Current (%)", ['center','bg']],
+                (0,3):[(1,1),"Pressure (Kg/cm²)", ['center','bg']],
+                (0,4):[(1,1),"Temperature (°C)", ['center','bg']],
+                (0,5):[(1,1),"Time (sec)", ['center','bg']],
+                (0,6):[(1,1),"Total Time", ['center','bg']],
                 (1,0):[(2,1),"", ['center']],
                 (1,1):[(2,1),"", ['center']],
         },}
@@ -145,18 +145,18 @@ class View(QMainWindow):
         self.widgets['graph'].showGrid(x=True, y=True)
         self.widgets['graph'].setBackground('w')
         self.widgets['graph'].getViewBox().setMouseEnabled(x=True, y=False)
-        self.widgets['graph'].setYRange(-2000,60000, padding=0.03)
+        self.widgets['graph'].setYRange(-6000,60000, padding=0.03)
         self.widgets['graph'].getPlotItem().showAxis('right')
         # --------------------------
         right_axis = self.widgets['graph'].getPlotItem().getAxis('right')
-        right_ticks = [(-2000, '  %,  mm'), (0, '  0,   60'), (6000, ' 12,  66'), (12000, ' 24,  72'), (18000, ' 36,  78'), (24000, ' 48,  84'), (30000, ' 60,  90'), \
+        right_ticks = [(-6000, '  %,  mm'), (0, '  0,   60'), (6000, ' 12,  66'), (12000, ' 24,  72'), (18000, ' 36,  78'), (24000, ' 48,  84'), (30000, ' 60,  90'), \
                        (36000, ' 72,  96'), (42000, ' 84, 102'), (48000, ' 96, 108'), (54000, '108, 114'), (60000, '120, 120')]
         right_axis.setTicks([right_ticks])
         right_axis.setWidth(130)
         right_axis.setTextPen(pg.mkPen('k'))
         # --------------------------
         left_axis = self.widgets['graph'].getPlotItem().getAxis('left')
-        left_ticks = [(-2000, 'Kg/cm²,   °C'), (0, '0,  300'), (6000, '6000,  400'), (12000, '12000,  500'), (18000, '18000,  600'), (24000, '24000,  700'), (30000, '30000,  800'), \
+        left_ticks = [(-6000, 'Kg/cm²,   °C'), (0, '0,  300'), (6000, '6000,  400'), (12000, '12000,  500'), (18000, '18000,  600'), (24000, '24000,  700'), (30000, '30000,  800'), \
                       (36000, '36000,  900'), (42000, '42000, 1000'), (48000, '48000, 1100'), (54000, '54000, 1200'), (60000, '60000, 1300')]
         left_axis.setTicks([left_ticks])
         left_axis.setWidth(130)
@@ -179,11 +179,11 @@ class View(QMainWindow):
         # --------------------------
         self.table_spec['program_form']={'init_size' : (12,6), 'slim_rows' : [],'slim_cols' : [],
                     'text_items' : {
-                        (0,0):[(1,1),"STEP", ['center']],
-                        (0,1):[(1,1),"Current (%)", ['center']],
-                        (0,2):[(1,1),"Press (Kg/cm²)", ['center']],
-                        (0,3):[(1,1),"Temp' (°C)", ['center']],
-                        (0,4):[(1,1),"Time (sec)", ['center']],
+                        (0,0):[(1,1),"STEP", ['center','bg']],
+                        (0,1):[(1,1),"Current (%)", ['center','bg']],
+                        (0,2):[(1,1),"Press (Kg/cm²)", ['center','bg']],
+                        (0,3):[(1,1),"Temp' (°C)", ['center','bg']],
+                        (0,4):[(1,1),"Time (sec)", ['center','bg']],
                         (0,5):[(1,1),"12", ['center']],
                         (1,0):[(1,1),"1", ['center']],
                         (1,1):[(1,1),"", ['center']],
@@ -196,7 +196,7 @@ class View(QMainWindow):
                         (2,2):[(1,1),"", ['center']],
                         (2,3):[(1,1),"", ['center']],
                         (2,4):[(1,1),"", ['center']],
-                        (2,5):[(1,1),"Press Kg/cm²", ['center']],                        
+                        (2,5):[(1,1),"Press (Kg/cm²)", ['center','bg']],                        
                         (3,0):[(1,1),"3", ['center']],
                         (3,1):[(1,1),"", ['center']],
                         (3,2):[(1,1),"", ['center']],
@@ -208,7 +208,7 @@ class View(QMainWindow):
                         (4,2):[(1,1),"", ['center']],
                         (4,3):[(1,1),"", ['center']],
                         (4,4):[(1,1),"", ['center']],
-                        (4,5):[(1,1),"Cool Time sec", ['center']],      
+                        (4,5):[(1,1),"Cool Time (sec)", ['center','bg']],      
                         (5,0):[(1,1),"5", ['center']],
                         (5,1):[(1,1),"", ['center']],
                         (5,2):[(1,1),"", ['center']],
@@ -220,7 +220,7 @@ class View(QMainWindow):
                         (6,2):[(1,1),"", ['center']],
                         (6,3):[(1,1),"", ['center']],
                         (6,4):[(1,1),"", ['center']],
-                        (6,5):[(1,1),"END Temp' °C", ['center']],           
+                        (6,5):[(1,1),"END Temp' (°C)", ['center','bg']],           
                         (7,0):[(1,1),"7", ['center']],
                         (7,1):[(1,1),"", ['center']],
                         (7,2):[(1,1),"", ['center']],
@@ -232,7 +232,7 @@ class View(QMainWindow):
                         (8,2):[(1,1),"", ['center']],
                         (8,3):[(1,1),"", ['center']],
                         (8,4):[(1,1),"", ['center']],
-                        (8,5):[(1,1),"SINT DIM.mm", ['center']],           
+                        (8,5):[(1,1),"SINT DIM.(mm)", ['center','bg']],           
                         (9,0):[(1,1),"9", ['center']],
                         (9,1):[(1,1),"", ['center']],
                         (9,2):[(1,1),"", ['center']],
@@ -244,7 +244,7 @@ class View(QMainWindow):
                         (10,2):[(1,1),"", ['center']],
                         (10,3):[(1,1),"", ['center']],
                         (10,4):[(1,1),"", ['center']],
-                        (10,5):[(1,1),"MinCurrent%", ['center']],          
+                        (10,5):[(1,1),"MinCurrent(%)", ['center','bg']],          
                         (11,0):[(1,1),"11", ['center']],
                         (11,1):[(1,1),"Holding", ['center']],
                         (11,2):[(1,1),"", ['center']],
@@ -326,15 +326,15 @@ class View(QMainWindow):
     def get_mould_view_layout(self)->QVBoxLayout:
         self.table_spec['mould_top_form'] ={'init_size' : (5,6), 'slim_rows' : [],'slim_cols' : [],
                     'text_items' : {
-                        (0,0):[(1,1),"Magazine", ['center']],
-                        (1,0):[(1,1),"Start", ['center']],
-                        (3,0):[(1,1),"Finish", ['center']],
-                        (0,3):[(2,1),"sintering Magazine", ['center']],
+                        (0,0):[(1,1),"Magazine", ['center','bg']],
+                        (1,0):[(1,1),"Start", ['center','bg']],
+                        (3,0):[(1,1),"Finish", ['center','bg']],
+                        (0,3):[(2,1),"sintering Magazine", ['center','bg']],
                         (0,4):[(2,1),"", ['center']],
                         (0,5):[(2,1),"", ['center']],
-                        (2,3):[(1,2),"work prg.no", ['center']],
-                        (3,3):[(1,2),"work set count", ['center']], #영문명 확인필 temp
-                        (4,3):[(1,2),"work count", ['center']],
+                        (2,3):[(1,2),"work prg.no", ['center','bg']],
+                        (3,3):[(1,2),"work set count", ['center','bg']],
+                        (4,3):[(1,2),"work count", ['center','bg']],
                     }}
         self.table_spec['mould_top_pos']={
             "magazine_l":(0,1),
@@ -358,11 +358,12 @@ class View(QMainWindow):
         # --------------------------
         self.table_spec['mould_bottom_form']={'init_size' : (7,6), 'slim_rows' : [],'slim_cols' : [],
                     'text_items' : {
-                        (0,1):[(1,1),"Turn", ['center']],
-                        (0,2):[(1,1),"Height", ['center']],
-                        (0,3):[(1,1),"Turn", ['center']],
-                        (0,4):[(1,1),"Height", ['center']],
-                        (0,5):[(1,1),"prg.no", ['center']],
+                        (0,0):[(1,1),"", ['center','bg']],
+                        (0,1):[(1,1),"Turn", ['center','bg']],
+                        (0,2):[(1,1),"Height", ['center','bg']],
+                        (0,3):[(1,1),"Turn", ['center','bg']],
+                        (0,4):[(1,1),"Height", ['center','bg']],
+                        (0,5):[(1,1),"prg.no", ['center','bg']],
                         (1,0):[(1,1),"1", ['center']],
                         (2,0):[(1,1),"2", ['center']],
                         (3,0):[(1,1),"3", ['center']],
